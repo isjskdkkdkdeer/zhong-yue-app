@@ -4253,6 +4253,45 @@ function offlineFetch(){
   }).catch(function(){ offlineFetching = false; });
 }
 
+/* ================= 网页推送（Web Push） =================
+   登录后订阅推送：浏览器把订阅发给 Worker 存进 D1；对方发消息存进 D1 时，
+   Worker 就按订阅给对方手机发一条推送。只在加到主屏幕的网页版里生效；
+   原生 IPA 里没有 PushManager，会直接跳过。 */
+var VAPID_PUBLIC_KEY = "BLlusumjBLlLecF_BBebPHeOUOD1oI1g2SlzzTvk9ibz2ybMoXNlhD9c5DU13IcO0HV96Em2F68GduKOol1plh8";
+function pushSubscribe(){
+  try {
+    if (!OFFLINE_API || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    if (Notification.permission === "denied") return;
+    var b64ToBytes = function(s){
+      var t = String(s).replace(/-/g, "+").replace(/_/g, "/");
+      while (t.length % 4) t += "=";
+      var bin = atob(t), out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    };
+    var doSub = function(){
+      navigator.serviceWorker.ready.then(function(reg){
+        return reg.pushManager.getSubscription().then(function(sub){
+          if (sub) return sub;
+          return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC_KEY) });
+        });
+      }).then(function(sub){
+        if (!sub) return;
+        return offlineToken().then(function(token){
+          if (!token) return;
+          return fetch(OFFLINE_API + "/push-subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify({ subscription: sub.toJSON() }),
+          }).catch(function(){});
+        });
+      }).catch(function(){});
+    };
+    if (Notification.permission === "granted") doSub();
+    else Notification.requestPermission().then(function(p){ if (p === "granted") doSub(); }).catch(function(){});
+  } catch(e){}
+}
+
 /* ================= 聊天（记录按账号分开存） ================= */
 function chatHistPrefix(){ return "zhyuetong-chat-hist-v1-" + encodeURIComponent(myEmail) + "-"; }
 var chatConns = {};
@@ -4984,6 +5023,7 @@ function enterApp(email){
   destroySignal();
   if (myNum) initSignal();
   offlineFetch();
+  pushSubscribe();
   ensureMyNum();
   startPresence();
   bootRoomFromUrl();
