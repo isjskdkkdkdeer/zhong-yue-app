@@ -1,0 +1,4 @@
+node_modules/
+ios/App/build/
+ios/App/DerivedData/
+.DS_Store
