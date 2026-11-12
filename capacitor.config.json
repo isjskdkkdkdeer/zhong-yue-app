@@ -1,9 +1,5 @@
 {
   "appId": "com.zhongyue.tongyi",
   "appName": "中越通译",
-  "webDir": "www",
-  "server": {
-    "url": "https://zhong-yue-tong-yi.pages.dev",
-    "cleartext": false
-  }
+  "webDir": "www"
 }
