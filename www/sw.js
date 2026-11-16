@@ -1,6 +1,6 @@
 /* 中越通译 PWA service worker：只缓存 app 外壳，聊天/通话/接口一律走网络；收到推送时显示通知 */
-var CACHE = "zhong-yue-v2";
-var SHELL = ["/", "/index.html", "/manifest.json", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
+var CACHE = "zhong-yue-v6";
+var SHELL = ["/", "/index.html", "/manifest.json", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png", "/avatar-m1.jpg", "/avatar-m2.jpg", "/avatar-f1.jpg", "/avatar-f2.jpg", "/avatar-ha.jpg"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
 });
@@ -26,10 +26,13 @@ self.addEventListener("fetch", function (e) {
   }));
 });
 
-/* 收到网页推送：显示一条通知。点通知打开 app。 */
+/* 收到网页推送：显示一条通知。点通知打开 app。
+   来电推送（type "call"）和普通消息用不同的 tag，互不顶掉；点开后 app 里
+   的来电界面由通话信令接手（拨号方 45 秒内还在等接听）。 */
 self.addEventListener("push", function (e) {
   var data = {};
   try { data = e.data ? e.data.json() : {}; } catch (err) {}
+  var isCall = data.type === "call";
   var title = data.title || "中越通译";
   var body = data.body || "你有一条新消息";
   var tag = data.tag || "zhong-yue-msg";
@@ -39,7 +42,7 @@ self.addEventListener("push", function (e) {
     badge: "/icon-192.png",
     tag: tag,
     renotify: true,
-    data: { url: "/" }
+    data: { url: "/", kind: isCall ? "call" : "msg" }
   }));
 });
 self.addEventListener("notificationclick", function (e) {

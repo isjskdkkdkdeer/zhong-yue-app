@@ -95,9 +95,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 6px 16px rgba(236,121,95,.35);
 }
-.logo-block svg{width:26px;height:26px}
 .logo-block.sm{width:36px;height:36px;border-radius:12px}
-.logo-block.sm svg{width:21px;height:21px}
 .avatar{
   border-radius:14px;background:var(--sage-avatar);color:#7d8974;
   display:flex;align-items:center;justify-content:center;font-weight:600;flex:none;
@@ -119,7 +117,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 .auth-card{width:100%;max-width:380px}
 .auth-brand{display:flex;flex-direction:column;align-items:center;text-align:center}
 .auth-brand .logo-block{width:60px;height:60px;border-radius:18px}
-.auth-brand .logo-block svg{width:34px;height:34px}
 .auth-name{font-size:24px;font-weight:800;margin-top:14px;letter-spacing:.5px}
 .auth-sub{font-size:13px;color:var(--sub);margin-top:6px;line-height:1.7}
 .auth-box{
@@ -506,6 +503,8 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 .comp-btn:active{background:var(--sage-bg)}
 #chatPlusBtn.open{transform:rotate(45deg)}
 #chatMicBtn.rec{background:var(--coral);color:#fff}
+#botSpeakBtn{font-size:19px;line-height:1}
+.head-icon-btn.off{opacity:.45}
 .comp-lang{
   appearance:none;border:none;cursor:pointer;background:transparent;color:var(--ink-2);
   font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;padding:8px 6px;flex:none;
@@ -744,6 +743,24 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 #friendReqAcceptBtn{background:#3d9b4f}
 #friendReqDeclineBtn{background:#e23a2e}
 
+/* ===== 第 25 轮：来电更响 + 没声时闪屏提醒（2026-11-16）===== */
+/* 来电头像呼吸闪，没声音也能一眼看到；“轻点开启铃声”提示行 */
+.incoming-avatar{animation:icPulse 1s ease-in-out infinite}
+@keyframes icPulse{0%,100%{box-shadow:0 12px 30px rgba(0,0,0,.5),0 0 0 0 rgba(255,255,255,.45)}50%{box-shadow:0 12px 30px rgba(0,0,0,.5),0 0 0 14px rgba(255,255,255,0)}}
+.incoming-card .ic-hint{font-size:13px;font-weight:600;color:#ffd9a8;margin-top:10px}
+.incoming-card .ic-hint.hidden{display:none}
+
+/* ===== 第 28 轮：退出登录沉底 + 房间号行改成推荐好友（2026-11-16）===== */
+/* 退出登录排到最下面（房间号行之后、页脚说明之前）；推荐好友占原来房间号行的位置 */
+#tabSettings>.logout-row{order:5}
+#tabSettings>#inviteRowBtn{order:4}
+#tabSettings>#invitePanel{order:4}
+.invite-qr{display:block;width:180px;height:180px;margin:4px auto 10px;background:#fff;padding:10px;border-radius:12px}
+.invite-note{font-size:13px;color:var(--sub);text-align:center;line-height:1.6}
+.invite-url{font-size:12.5px;color:var(--ink-2);text-align:center;word-break:break-all;margin:8px 0 12px}
+#inviteCopyBtn{display:block;width:100%}
+.invite-addme{font-size:12.5px;color:var(--sub);text-align:center;margin-top:12px;line-height:1.6}
+
 /* ---------- desktop: centered frame, no 4-column rebuild ---------- */
 @media (min-width:800px){
   .home-screen,.chat-screen{max-width:640px}
@@ -919,6 +936,310 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 /* 设置页昵称旁边显示动漫头像（第 5 轮藏掉的头像重新显示，56px） */
 #tabSettings #myAvatar{display:flex;width:56px;height:56px;border-radius:18px;flex:none;background:transparent}
 
+/* ===== 第 12 轮：排版美化 + 全面优化检查（2026-11-13，Ha 要求：从排版开始美化，再检查其他地方）===== */
+/* 目标：不改结构、不改功能、不动 JS，只把排版收得更精致、更接近越聊的轻盈感；顺手修几处不一致。 */
+/* 全局：去掉手机上点按的灰色闪光，滚动更顺滑 */
+button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
+.home-body, .chat-messages{ -webkit-overflow-scrolling:touch; }
+/* 顶部栏：右上角“网页体验版”徽章只留淡字，不再像个标签；语言选择改成无边框的浅底 pill */
+.web-badge{padding:4px 8px;font-size:9.5px;color:#a3a8a4;background:transparent;border-color:transparent}
+.top-lang-sel{border-color:transparent;background:var(--bg-soft);padding:7px 10px}
+/* 列表行：名字和预览的字号层级收一档，未读角标更精致（接近越聊的 17px 小圆点） */
+.friend-name{font-size:15.5px}
+.friend-sub{font-size:12px}
+.friend-unread{min-width:18px;height:18px;line-height:18px;font-size:10.5px;padding:0 5px}
+/* 聊天页：消息之间更透气，气泡阴影更淡，翻译区字更小更淡、更接近越聊 */
+.chat-messages{gap:22px}
+.msg-head .avatar{width:30px;height:30px;font-size:12.5px;border-radius:10px}
+.msg-bubble{box-shadow:0 1px 3px rgba(38,60,22,.03)}
+.msg-bubble .orig{font-size:14px;line-height:1.65}
+.msg-bubble .trans-block{margin-top:8px;padding-top:7px}
+.msg-bubble .trans{font-size:11.5px;line-height:1.7;color:#93a08d}
+.msg-bubble .trans-label{font-size:10.5px}
+.msg-meta{font-size:9.5px;margin-top:6px}
+/* 翻译开关条：内边距收一点，字小一点，不再那么抢眼 */
+.trans-bar{margin:12px 16px 0;padding:10px 13px}
+.trans-bar .tb-txt{font-size:12.5px}
+/* 输入框：更紧凑、更轻；发送键收一点，仍够大、好按 */
+.composer{border-radius:16px;padding:12px 14px 9px;box-shadow:0 2px 10px rgba(40,51,46,.06)}
+#chatInput{font-size:15px;min-height:48px;line-height:1.55}
+.composer-row{margin-top:8px}
+#chatSendBtn{padding:10px 16px;font-size:14.5px;border-radius:12px}
+.comp-btn{width:38px;height:38px}
+.comp-btn svg{width:22px;height:22px}
+/* 聊天顶栏头像：44px，和好友列表的视觉重量更接近 */
+.chat-head .avatar{width:44px;height:44px;font-size:18px;border-radius:12px}
+/* 登录页：顶部一点暖色过渡，卡片更柔和，第一印象更暖 */
+.auth-screen{background:linear-gradient(180deg,#fdf3ee 0%,var(--bg) 220px)}
+.auth-brand .logo-block{box-shadow:0 8px 22px rgba(236,121,95,.35),0 0 0 6px rgba(236,121,95,.08)}
+.auth-box{border-radius:22px;padding:22px 18px 18px}
+.auth-name{font-size:25px}
+/* 设置页：昵称编辑面板和房间面板的内边距收紧一点 */
+#tabSettings .nick-panel{padding:14px 16px}
+#tabSettings .room-panel{padding:14px 16px}
+/* 深色模式补丁 */
+@media (prefers-color-scheme: dark){
+.auth-screen{background:linear-gradient(180deg,#2e2620 0%,var(--bg) 220px)}
+.msg-bubble .trans{color:#a8b5a4}
+}
+
+/* ===== 第 13 轮：整体像真正聊天软件（2026-11-16，Ha 要求：整体感觉不像真正聊天软件）===== */
+/* 目标：只改 CSS，不动结构、不动 JS、不动 id。把“网页感”去掉：顶栏不再挂“网页体验版”和语言下拉，
+   内容区不再有大标题和筛选条，列表改成通栏细线分隔的真列表，聊天窗去掉横幅/脚注、输入框改成单行，
+   每条消息不再顶头像+名字，底部栏选中态不再是色块。 */
+/* 顶栏：藏掉“网页体验版”徽章和顶部语言下拉（语言切换在设置页和聊天输入框里都有） */
+.web-badge{display:none}
+.top-lang-sel{display:none}
+/* 内容区大标题：藏掉“消息/好友/通话”的 24px 大标题和计数，只留右边的＋按钮当一根细工具条 */
+.page-title-row{margin-top:12px}
+.page-title,.page-count{display:none}
+#tabCalls .page-title-row{display:none}
+/* 筛选条：藏掉（全部/我的好友/未读），JS 的 setHomeFilter 不受影响 */
+.filter-row{display:none}
+/* 搜索框：去边框去阴影，改成扁平灰底圆角条，像微信那样 */
+.search-box{border:0;box-shadow:none;border-radius:10px;padding:0 12px;margin-top:12px}
+/* 列表：通栏、不留缝、行与行之间只剩一根细线，像微信/Zalo 的会话列表 */
+.friend-list{margin:8px -18px 0;gap:0}
+.friend-row{border-radius:0;padding:13px 18px;border-bottom:1px solid var(--line)}
+.friend-list .friend-row:last-child{border-bottom:0}
+.friend-row:hover{background:var(--bg-soft)}
+.friend-empty{border:0;background:transparent;box-shadow:none;text-align:center}
+/* 好友页推广卡：藏掉（好友页只剩联系人列表，像微信通讯录） */
+#tabFriends .promo-card{display:none}
+/* 底部栏：选中态只变色，不再是色块 */
+.tab-btn{border-radius:0}
+.tab-btn.sel{background:transparent}
+/* 聊天窗：藏掉翻译横幅、“聊天记录保存在本设备”分隔线和底部脚注 */
+.trans-bar{display:none}
+.chat-divider{display:none}
+.chat-foot{display:none}
+/* 聊天窗：每条消息不再顶头像+名字，只剩气泡，像微信单聊；消息间距收紧 */
+.msg-head{display:none}
+.chat-messages{gap:12px;padding:14px 14px 10px}
+/* 输入框：改成单行——[+] 输入框 [语音] [语言] [发送]，输入框是灰底圆角条 */
+.composer-wrap{background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(env(safe-area-inset-bottom, 0px) + 8px)}
+.composer{display:flex;align-items:flex-end;gap:8px;background:transparent;border:0;box-shadow:none;border-radius:0;padding:0}
+.composer-row{display:contents}
+#chatInput{flex:1;min-width:0;width:auto;min-height:40px;background:var(--bg-soft);border-radius:20px;padding:10px 14px;order:2}
+#chatPlusBtn{order:1}
+#chatMicBtn{order:3}
+.comp-lang{order:4;padding:8px 4px}
+#chatSendBtn{order:5;margin-left:0;border-radius:999px;padding:10px 15px;box-shadow:none}
+/* 设置页：藏掉连接诊断卡和底部说明（开发信息不该出现在正式 App 里） */
+#tabSettings .diag-card{display:none}
+#tabSettings>.home-foot{display:none}
+/* 桌面端：列表通栏的负边距跟着 24px 内边距走 */
+@media (min-width:800px){
+.friend-list{margin-left:-24px;margin-right:-24px}
+.friend-row{padding-left:24px;padding-right:24px}
+.chat-messages{padding:16px 32px 10px}
+}
+@media (prefers-color-scheme: dark){
+.friend-row:hover{background:rgba(255,255,255,.05)}
+}
+
+/* ===== 第 15 轮：按越聊模板的舒服感（2026-11-16，Ha：那个模板看起来比较舒服）===== */
+/* 目标：只改 CSS，不动结构、不动 JS、不动 id。模板舒服的关键是：字更小、字重更轻、
+   行高更透气（气泡 1.8）、消息之间更空、翻译条是安静的浅绿细条、输入框 16px 不触发 iOS 放大。
+   联系人行改回模板的样子：内嵌圆角行，不再通栏细线。 */
+/* 字号和字重：往模板的手机尺寸靠 */
+.friend-name{font-size:14px;font-weight:600}
+.friend-sub{font-size:11px}
+.friend-status{font-size:10px}
+.chat-name{font-size:15px;font-weight:700}
+.chat-state{font-size:10px}
+.home-title{font-weight:700}
+.profile-nick{font-size:15px;font-weight:700}
+/* 气泡：原文行高 1.8，翻译字再小一号，标签和时间更安静 */
+.msg-bubble .orig{line-height:1.8}
+.msg-bubble .trans{font-size:11px}
+.msg-bubble .trans-label{font-size:9px}
+.msg-meta{font-size:9px}
+/* 消息之间更透气 */
+.chat-messages{gap:16px}
+/* 翻译条：按模板恢复成安静的浅绿细条（第 13 轮藏掉的），开关改成模板的小拨片 */
+.trans-bar{display:flex;margin:12px 14px 0;background:var(--sage-bg);border-color:var(--line);border-radius:10px;padding:10px 12px}
+.trans-bar .tb-ic svg{width:16px;height:16px}
+.trans-bar .tb-txt{font-size:10px}
+.trans-bar .tb-lang{font-size:10px}
+.trans-bar .switch{width:29px;height:17px}
+.trans-bar .switch::after{width:11px;height:11px;top:3px;left:3px}
+.trans-bar .switch.on::after{left:15px}
+/* 输入框和搜索框 16px：iOS 不会聚焦放大（模板也是这么处理的） */
+#chatInput{font-size:16px}
+.search-box input{font-size:16px}
+#chatSendBtn{font-size:12px;padding:9px 14px}
+/* 头像往模板的手机尺寸靠 */
+.friend-row .avatar{width:48px;height:48px}
+.chat-head .avatar{width:40px;height:40px}
+/* 联系人行：改回模板的内嵌圆角行（圆角 12px、4px 间距、悬停浅米色），不再通栏细线 */
+.friend-list{margin:8px -6px 0;gap:4px}
+.friend-row{border-radius:12px;padding:13px 12px;border-bottom:0}
+.friend-row:hover{background:#faf5ef}
+/* 聊天画布比页面底色再亮一点，像模板的主区 #fcfdfa */
+.chat-messages{background:#fcfdfa}
+.composer-wrap{background:#fcfdfa}
+@media (min-width:800px){
+.friend-list{margin-left:-12px;margin-right:-12px}
+}
+@media (prefers-color-scheme: dark){
+.friend-row:hover{background:rgba(255,255,255,.05)}
+.chat-messages{background:var(--bg)}
+.composer-wrap{background:var(--bg)}
+}
+
+/* ===== 第 16 轮：新 logo + 3D 风男女头像（2026-11-16，Ha 发了 logo 图）===== */
+/* logo：登录页和顶栏的珊瑚色聊天气泡换成 Ha 发的新 logo 图（icon-512.png）；圆角裁掉图片的黑角，
+   登录页的光晕改成蓝色。头像：setAvatar 不再画扁平 SVG，改成按号码固定分 4 张 3D 风图片头像。 */
+.logo-block{overflow:hidden;background:transparent;box-shadow:0 6px 16px rgba(30,90,200,.25)}
+.logo-block img{width:100%;height:100%;object-fit:cover;display:block}
+.auth-brand .logo-block{box-shadow:0 8px 22px rgba(30,90,200,.28),0 0 0 6px rgba(30,90,200,.07)}
+/* ===== 第 17 轮：设置页做成越聊模板的样子（2026-11-16，Ha：把设置做的跟他一样的）===== */
+/* 目标：大标题 + 浅绿号码卡 + 通栏细线行，跟模板截图一致。模板里有的几行（昵称 / 我的语言 /
+   消息通知与来电提醒 / 好友连接 / 体验版说明）都补上，点的都是已有的功能（改昵称、切语言、
+   推送订阅、诊断卡、退出），不删任何 id、不动登录好友通话。 */
+/* 大标题回到模板的 24px，副标题安静一点；标题和行都左对齐到同一条线 */
+.settings-head{padding:6px 0 0;margin-bottom:4px}
+.settings-head h1{font-size:24px;font-weight:700}
+.settings-head p{margin-top:8px;font-size:12px;color:#99a58c;line-height:1.9}
+/* 号码卡改成模板的浅绿号码卡：只要“我的好友号 + 复制 + 大号码”，头像、昵称、改昵称/退出按钮都藏掉（功能移到下面的行里，元素还在，JS 不受影响） */
+#tabSettings .profile-card{margin-bottom:0;padding:13px;border-radius:10px;gap:0}
+#tabSettings #myAvatar{display:none}
+#tabSettings .profile-main{width:100%}
+#tabSettings .profile-nick{display:none}
+#tabSettings .profile-btns{display:none}
+#tabSettings .profile-num{flex-wrap:wrap;gap:0;margin-top:0;font-size:11px;color:#819170}
+#tabSettings .profile-num #myNumTxt{flex-basis:100%;order:3;margin-top:2px;font-size:18px;font-weight:800;color:#6b7f5e;letter-spacing:1px}
+#tabSettings .profile-num button{order:2;font-size:12px}
+/* ===== 第 23 轮：微信样式输入栏 + 设置页头像和连接状态（2026-11-16）===== */
+/* 输入栏：微信那样——灰底条、左边语音圆钮、白色圆角输入框、表情圆钮、加号；有字时加号变绿色发送 */
+.composer-wrap{background:#f7f7f7;border-top:1px solid #e5e5e5}
+.composer{align-items:center}
+#chatInput{background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:9px 12px}
+#chatMicBtn{order:1;width:32px;height:32px;border:1.5px solid var(--ink);color:var(--ink);border-radius:50%}
+#chatMicBtn svg{width:19px;height:19px}
+#chatEmojiBtn{order:3;width:32px;height:32px;border:1.5px solid var(--ink);color:var(--ink);border-radius:50%}
+#chatEmojiBtn svg{width:20px;height:20px}
+#chatPlusBtn{order:4;width:32px;height:32px;border:1.5px solid var(--ink);color:var(--ink);border-radius:50%}
+#chatPlusBtn svg{width:19px;height:19px}
+#chatPlusBtn .ic-send{display:none}
+#chatPlusBtn.send-mode{background:#07c160;border-color:#07c160;color:#fff;box-shadow:none}
+#chatPlusBtn.send-mode .ic-plus{display:none}
+#chatPlusBtn.send-mode .ic-send{display:block}
+#chatPlusBtn.send-mode.open{transform:none}
+#chatLangBtn{display:none}
+#chatSendBtn{display:none}
+/* 表情面板：点表情插进输入框 */
+.emoji-panel{flex:none;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:10px 12px 4px;background:var(--bg)}
+.emoji-panel.hidden{display:none}
+.emoji-panel button{appearance:none;border:none;background:transparent;cursor:pointer;font-size:24px;line-height:1.4;padding:6px 0;text-align:center}
+.emoji-panel button:active{transform:scale(1.15)}
+/* 设置页头像：像微信个人页那样露出来——头像 + 昵称 + 好友号，下面挂连接状态小标签 */
+#tabSettings .profile-card{gap:12px}
+#tabSettings #myAvatar{display:flex;width:64px;height:64px;border-radius:18px;flex:none}
+#tabSettings .profile-main{width:auto;flex:1;min-width:0}
+#tabSettings .profile-nick{display:block}
+#tabSettings .profile-num{margin-top:4px}
+#tabSettings .profile-num #myNumTxt{flex-basis:auto;order:0;margin-top:0;font-size:14px}
+.profile-status{width:100%;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.status-pill .dot{width:8px;height:8px;border-radius:50%;background:#b8beb9;flex:none}
+.status-pill.on .dot{background:#07c160}
+.status-pill.wait .dot{background:#f5a623}
+/* 模板的行：通栏、底部分隔线、左文右值 */
+#tabSettings .setting-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:19px 0;border:0;border-bottom:1px solid var(--line);background:transparent;font-size:15px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
+#tabSettings .setting-row>span{color:#9ba58f;font-size:13px;font-weight:400;display:flex;align-items:center;gap:5px;white-space:nowrap}
+#tabSettings .setting-row .chev{font-size:19px;color:#b5b8af;line-height:1}
+#tabSettings .setting-row:active{background:var(--bg-soft)}
+/* 旧的语言双按钮卡藏掉（功能由“我的语言”那行接管，按钮还留在 DOM 里，JS 不受影响） */
+#tabSettings .lang-card.lang-old{display:none}
+/* 自动翻译卡改成模板的行：左文右拨片，拨片改成模板的 29×17 */
+#tabSettings>.lang-card{background:transparent;border:0;border-bottom:1px solid var(--line);box-shadow:none;border-radius:0;padding:19px 0;flex-wrap:nowrap}
+#tabSettings .lang-card .lc-label{font-size:15px;font-weight:600;color:var(--ink)}
+#tabSettings .lang-card .switch{margin-left:auto;width:29px;height:17px}
+#tabSettings .lang-card .switch::after{width:11px;height:11px;top:3px;left:3px}
+#tabSettings .lang-card .switch.on::after{left:15px}
+/* 房间折叠行跟其他行对齐 */
+#tabSettings .room-fold{margin-top:0;margin-bottom:0}
+#tabSettings .room-fold-head{padding:19px 0}
+#tabSettings .room-fold-head span:first-child{font-size:15px;font-weight:600}
+#tabSettings .room-panel{margin-top:12px}
+/* 诊断卡：平时藏着，点“好友连接”那行才展开（还是那张卡，只是换个入口） */
+#tabSettings .diag-card.show{display:block;margin:12px 0 0}
+/* 体验版说明面板：跟改昵称面板一个样式 */
+#tabSettings .trial-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0 0}
+#tabSettings .trial-panel p{font-size:12.5px;color:var(--sub);line-height:1.9}
+/* 退出登录：单独一行红字放底部 */
+#tabSettings .logout-row{width:100%;margin-top:14px;padding:16px 0;border:0;background:transparent;color:var(--danger);font-size:15px;font-weight:600;text-align:center;cursor:pointer}
+/* ===== 第 24 轮：＋ 菜单发图片/视频/文件（2026-11-16）===== */
+/* 六个入口排两行，每行三个 */
+.chat-plus-menu{flex-wrap:wrap}
+.plus-item{flex:1 1 28%}
+/* 气泡里的媒体：图片/视频圆角，文件是一行下载链接 */
+.msg-media{margin-bottom:2px}
+.msg-media img{max-width:220px;max-height:240px;border-radius:12px;display:block;object-fit:cover}
+.msg-media video{max-width:240px;max-height:220px;border-radius:12px;display:block;background:#000}
+.msg-file{display:inline-flex;align-items:center;gap:6px;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;word-break:break-all}
+.msg-file-name{font-size:12px;color:var(--sub);font-weight:600;margin-top:4px;word-break:break-all}
+/* 设置页资料卡：头像和昵称合并成一行（头像 40px 紧贴昵称），号码和状态标签各占一行 */
+#tabSettings .profile-card{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:10px}
+#tabSettings .profile-top{display:flex;align-items:center;gap:10px}
+#tabSettings #myAvatar{width:40px;height:40px;border-radius:12px}
+#tabSettings .profile-main{width:100%;flex:none}
+#tabSettings .profile-num{margin-top:0}
+/* 资料卡搬到最上面，跟昵称那行合并：卡片第一行（头像 + 昵称 + ›）就是改昵称的入口，单独那行删了 */
+#tabSettings>.profile-card{order:0}
+#tabSettings>.nick-panel{order:0}
+#tabSettings .profile-top{cursor:pointer}
+#tabSettings .profile-top .chev{margin-left:auto;font-size:19px;color:#b5b8af;line-height:1}
+#tabSettings .logout-row:active{background:var(--bg-soft)}
+/* 底部说明恢复成模板那段话 */
+#tabSettings>.home-foot{display:block;margin-top:22px;text-align:left;font-size:10px;color:#9ba58f;line-height:1.9;padding:0}
+@media (prefers-color-scheme: dark){
+#tabSettings .profile-num #myNumTxt{color:#aac4aa}
+#tabSettings .setting-row,#tabSettings>.lang-card,#tabSettings .room-fold-head{border-bottom-color:#3e382f}
+}
+/* 第 33 轮：资料卡按越聊截图改版 + 点开改资料（换头像/改男女/昵称/邮箱/密码/好友号） */
+#tabSettings .profile-card{padding:18px 16px 14px;gap:14px}
+#tabSettings .profile-top{align-items:center;gap:14px}
+#tabSettings #myAvatar{width:64px;height:64px;border-radius:18px;flex:none}
+#tabSettings .profile-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#tabSettings .profile-nick{font-size:21px;font-weight:800;line-height:1.2}
+#tabSettings .profile-num{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub);margin-top:0}
+#tabSettings .profile-num #myNumTxt{font-size:14px;font-weight:700;color:var(--sub);letter-spacing:.5px;flex-basis:auto;order:0;margin-top:0}
+#tabSettings .profile-num .copy-ico{border:0;background:transparent;color:#9aa08f;font-size:17px;line-height:1;padding:2px;cursor:pointer}
+#tabSettings .profile-top .chev{font-size:24px;color:#c6c9bd}
+#tabSettings .profile-pills{display:flex;gap:10px}
+#tabSettings .pill-btn{flex:1;border:1px solid #d8dcd2;background:#fff;border-radius:999px;padding:10px 6px;font-size:14px;font-weight:600;color:#5b6257;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+#tabSettings .pill-btn:active{background:#f4f6f0}
+#tabSettings .pill-btn .chev{font-size:15px;color:#9aa08f}
+#tabSettings .profile-status{margin-top:0}
+#tabSettings>.profile-edit-panel{order:0}
+.profile-edit-panel{background:#fff;border:1px solid #e6e8df;border-radius:14px;padding:16px;margin-bottom:10px;display:flex;flex-direction:column;gap:12px}
+.profile-edit-panel.hidden{display:none}
+.pe-avatars{display:flex;gap:10px;flex-wrap:wrap}
+.pe-avatar{width:52px;height:52px;border-radius:14px;border:2px solid transparent;padding:0;overflow:hidden;cursor:pointer;background:#f4f6f0}
+.pe-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.pe-avatar.sel{border-color:#7ba05b;box-shadow:0 0 0 2px #dce8d2}
+.pe-gender-row{display:flex;align-items:center;gap:8px}
+.pe-field-label{font-size:13px;font-weight:700;color:var(--sub);min-width:52px}
+.pe-gender-btn{border:1px solid #d8dcd2;background:#fff;border-radius:999px;padding:7px 18px;font-size:14px;font-weight:600;color:#5b6257;cursor:pointer}
+.pe-gender-btn.sel{background:#eef3e6;border-color:#7ba05b;color:#4c6b3a}
+.pe-field{display:flex;flex-direction:column;gap:5px}
+.pe-field>span{font-size:13px;font-weight:700;color:var(--sub)}
+.pe-field .panel-input{width:100%}
+.pe-warn{font-size:12px;line-height:1.6;color:#b07817;background:#fdf6e3;border-radius:8px;padding:8px 10px}
+@media (prefers-color-scheme: dark){
+#tabSettings .profile-num #myNumTxt{color:#b9c4ae}
+#tabSettings .pill-btn{background:#2c3324;border-color:#3e4636;color:#cfd6c2}
+#tabSettings .profile-num .copy-ico{color:#8b917e}
+#tabSettings .profile-top .chev{color:#6f7466}
+.profile-edit-panel{background:#232a1e;border-color:#333b2c}
+.pe-gender-btn{background:#2c3324;border-color:#3e4636;color:#cfd6c2}
+.pe-gender-btn.sel{background:#31402a;border-color:#7ba05b;color:#b9d6a4}
+.pe-warn{background:#3a2f14;color:#e8c876}
+}
+
 </style>
 </head>
 <body>
@@ -927,7 +1248,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 <div class="auth-screen" id="authScreen">
   <div class="auth-card">
     <div class="auth-brand">
-      <div class="logo-block"><svg viewBox="0 0 24 24" fill="#fff"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4V5a2 2 0 0 1 2-2z" opacity=".0"/><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><path d="M7 7h10v2H7zM7 11h7v2H7z" fill="#ec795f"/></svg></div>
+      <div class="logo-block"><img src="icon-512.png" alt="中越通译"></div>
       <div class="auth-name">中越通译</div>
       <div class="auth-sub">和越南朋友聊天、打电话，自动中越互译<br/>Trò chuyện và gọi điện với bạn bè, dịch tự động Trung–Việt</div>
     </div>
@@ -956,7 +1277,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
 <!-- ================= 开始屏 ================= -->
 <div class="home-screen hidden" id="homeScreen">
   <div class="home-head">
-    <div class="logo-block sm"><svg viewBox="0 0 24 24" fill="#fff"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><path d="M7 7h10v2H7zM7 11h7v2H7z" fill="#ec795f"/></svg></div>
+    <div class="logo-block sm"><img src="icon-512.png" alt="中越通译"></div>
     <div class="home-title">中越通译</div>
     <select class="top-lang-sel" id="topLangSel" aria-label="我说的语言">
       <option value="zh">中文</option>
@@ -1020,35 +1341,46 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
     <div id="tabSettings" class="hidden">
 <div class="settings-head"><h1>我的中越通译</h1><p>你的语言，连接世界的方式。</p></div>
 <div class="profile-card">
-      <div class="avatar" id="myAvatar">?</div>
-      <div class="profile-main">
-        <div class="profile-nick" id="myNick">我</div>
-        <div class="profile-email" id="myEmailTxt"></div>
-        <div class="profile-num">我的号码：<span id="myNumTxt">生成中…</span><button id="copyNumBtn" type="button">复制</button></div>
+      <div class="profile-top" id="profileTop">
+        <div class="avatar" id="myAvatar">?</div>
+        <div class="profile-id">
+          <div class="profile-nick" id="myNick">我</div>
+          <div class="profile-num"><span id="myNumLabel">好友号：</span><span id="myNumTxt">生成中…</span><button id="copyNumBtn" type="button" class="copy-ico" aria-label="复制好友号">⧉</button></div>
+        </div>
+        <span class="chev">›</span>
       </div>
-      <div class="profile-btns">
-        <button class="mini-btn" id="editNickBtn" type="button">改昵称</button>
-        <button class="mini-btn logout" id="logoutBtn" type="button">退出登录</button>
+      <div class="profile-pills">
+        <button class="pill-btn" id="profileAddFriendBtn" type="button">＋ 连接好友</button>
+        <button class="pill-btn" id="profileFriendsBtn" type="button"><span id="profileFriendCount">0位好友</span><span class="chev">›</span></button>
+      </div>
+      <div class="profile-status">
+        <span class="status-pill" id="connPill">
+          <span class="dot"></span><span id="connPillTxt">未连接</span>
+        </span>
       </div>
     </div>
-<div class="nick-panel hidden" id="nickPanel">
-      <div class="np-label">我的昵称（对方看到的名字）</div>
-      <input class="panel-input" id="nickInput" type="text" maxlength="24" autocomplete="off" placeholder="比如：哈哈 · Ví dụ: Ha" />
+<div class="profile-edit-panel hidden" id="profileEditPanel">
+      <div class="np-label" id="peTitle">我的资料</div>
+      <div class="pe-avatars" id="peAvatarRow"></div>
+      <div class="pe-gender-row"><span class="pe-field-label" id="peGenderLabel">性别</span>
+        <button class="pe-gender-btn" id="peGenderMale" type="button">男</button>
+        <button class="pe-gender-btn" id="peGenderFemale" type="button">女</button>
+      </div>
+      <label class="pe-field"><span id="peNickLabel">昵称</span><input class="panel-input" id="peNickInput" type="text" maxlength="24" autocomplete="off" /></label>
+      <label class="pe-field"><span id="peEmailLabel">邮箱</span><input class="panel-input" id="peEmailInput" type="email" autocomplete="off" /></label>
+      <label class="pe-field"><span id="pePassLabel">新密码</span><input class="panel-input" id="pePassInput" type="password" autocomplete="new-password" placeholder="不改请留空" /></label>
+      <label class="pe-field"><span id="pePass2Label">确认密码</span><input class="panel-input" id="pePass2Input" type="password" autocomplete="new-password" /></label>
+      <label class="pe-field"><span id="peNumLabel">好友号</span><input class="panel-input" id="peNumInput" type="text" inputmode="numeric" maxlength="6" autocomplete="off" /></label>
+      <div class="pe-warn" id="peNumWarn">改了好友号，别人用旧号就找不到你了，要重新加好友。</div>
       <div class="panel-row">
-        <button class="panel-btn ghost" id="nickCancelBtn" type="button">取消</button>
-        <button class="panel-btn" id="nickSaveBtn" type="button">保存</button>
+        <button class="panel-btn ghost" id="peCancelBtn" type="button">取消</button>
+        <button class="panel-btn" id="peSaveBtn" type="button">保存</button>
       </div>
-      <div class="panel-err" id="nickErr"></div>
+      <div class="panel-err" id="peErr"></div>
     </div>
-<div class="diag-card" id="diagCard">
-      <div class="dc-title">连接诊断</div>
-      <div class="diag-row"><span class="dk">我的号码</span><span class="dv" id="diagNum">—</span></div>
-      <div class="diag-row"><span class="dk">信令频道</span><span class="dv" id="diagSignalState">未连接</span></div>
-      <div class="diag-row"><span class="dk">最后一次错误</span><span class="dv" id="diagLastErr">无</span></div>
-      <div id="diagFriends"></div>
-      <button class="diag-btn" id="diagReconnBtn" type="button">重新连接</button>
-    </div>
-<div class="lang-card">
+<button class="setting-row" id="langRowBtn" type="button">我的语言 <span><span id="langRowVal">简体中文</span> ⇄</span></button>
+<button class="setting-row" id="notifRowBtn" type="button">消息通知与来电提醒 <span id="notifRowVal">设置 🔔</span></button>
+<div class="lang-card lang-old">
       <div class="lc-label">我说的语言</div>
       <div class="lc-row">
         <button class="lc-btn" id="homeLangZh" type="button">中文</button>
@@ -1059,7 +1391,11 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
       <div class="lc-label">自动翻译</div>
       <button class="switch on" id="settingsTransSwitch" type="button" role="switch" aria-checked="true" aria-label="自动翻译开关"></button>
     </div>
-<div class="room-fold">
+<button class="setting-row" id="helpRowBtn" type="button">体验版说明 <span><span class="chev">›</span></span></button>
+<div class="trial-panel hidden" id="trialPanel">
+      <p>01 · 先加好友：用对方的好友号添加，双方同时在线就能聊天。<br/>02 · 消息和来电提醒：把网页装到主屏幕后才能收到推送；对方离线时消息会存在服务器，上线后自动取回。<br/>03 · 通话：语音和视频通话都带双语字幕。</p>
+    </div>
+<div class="room-fold hidden">
       <button class="room-fold-head" id="roomFoldBtn" type="button">
         <span>用房间号通话（备用）</span>
         <span class="rf-arrow">▾</span>
@@ -1084,9 +1420,17 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
         <div class="panel-note">创建房间后，把邀请链接发给对方，对方点开登录后直接进房间；或者把 6 位房间号告诉对方，对方在这里输入加入。</div>
       </div>
     </div>
+<button class="setting-row" id="inviteRowBtn" type="button">推荐好友 <span><span class="chev">›</span></span></button>
+<div class="trial-panel hidden" id="invitePanel">
+      <img class="invite-qr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACCElEQVR42u1bW27DMAwjlgPkSL16jpQDGNAS62Fl2E+/Nhb0RxA0Qj/KUqRoB/bWOqB61av+P9WfiPW67q5P4N8B7PcFm+Xz7ar/wntL9X9bf+O7OdYXvoGlg3zs8w9wffaaz0/hy4qv0/Tmr4PsSE98d2sPhC87vpO68aCatPD9EHy3ImzSWfh+kP7awNRav/jaTfpLju/yz5v9epF/ZsZ3LXdVo41LQd01T+n35MN3IA3zQOivja7OrsTiLy2+eclAIwQ3SYychIUvqX+OXlz8Patxl6cWf5n91d2aw0mP6MVWU1FZbOHL6a/CUHki3e8u6o5AX/2Z2D/PrNnOTJ1LjoPEluwWvrzzUUYbAz2JTvcl/aXm7wSvWnNpMlowvUt/Wf2zbwMumS1Pnf1Z+Qb5fFTWCmmofu4USn+Z+dsABdYmUlNn6S/zfOTR5GP0fXZv6S93fx4t5Ig7K39V45LwJeTvcBuVh7DqkN3DX6k/M+uvpY3KAxt5nCP6MzT/UvP3qPz5SP1NzzU9tUl/yedfIKOrrr/ptOSvqP1zy5p7avWks/ozKX/zdu36OqoWcVYewhK+vP6qthbaWY2H+9J8xDz/Av2s5Mq0WtIh/aXHN19YeJjoip7Vn+n5C/QXyh4HZ7W/wK+/tbUQDblvIqk/8/vnNf+mnQawqT9/yvyr999Vr3qq+m8cnpeSyItFDwAAAABJRU5ErkJggg==" alt="扫码打开中越通译" />
+      <div class="invite-note" id="inviteNote">好友扫码打开中越通译</div>
+      <div class="invite-url" id="inviteUrl">https://zhong-yue-tong-hua-fanyi.vercel.app/</div>
+      <button class="panel-btn" id="inviteCopyBtn" type="button">复制链接</button>
+      <div class="invite-addme" id="inviteAddMe"></div>
+    </div>
+<button class="logout-row" id="logoutRowBtn" type="button">退出登录</button>
 <div class="home-foot">
-      双方需保持网页打开 · 聊天记录仅保存在本机<br/>
-      版本号 v1
+      聊天记录保存在当前浏览器。翻译常用语之外的文本会发送至 MyMemory；语音识别由浏览器提供，可能使用浏览器厂商的在线服务。
     </div>
     </div>
   </div>
@@ -1129,6 +1473,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
     <button class="head-icon-btn" id="chatCallVideoBtn" type="button" aria-label="视频通话">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
     </button>
+    <button class="head-icon-btn" id="botSpeakBtn" type="button" aria-label="助手语音开关" style="display:none">🔊</button>
     <button class="head-icon-btn" id="chatInfoBtn" type="button" aria-label="对方信息">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
     </button>
@@ -1157,26 +1502,50 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
       <span class="pi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2.01z"/></svg></span>
       <span class="pi-tx">语音通话</span><span class="pi-sub">Gọi thoại</span>
     </button>
+    <button class="plus-item" id="plusImageBtn" type="button">
+      <span class="pi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
+      <span class="pi-tx">图片</span><span class="pi-sub">Ảnh</span>
+    </button>
+    <button class="plus-item" id="plusVideoSendBtn" type="button">
+      <span class="pi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span>
+      <span class="pi-tx">视频</span><span class="pi-sub">Video</span>
+    </button>
+    <button class="plus-item" id="plusFileBtn" type="button">
+      <span class="pi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg></span>
+      <span class="pi-tx">文件</span><span class="pi-sub">Tệp</span>
+    </button>
+    <button class="plus-item" id="plusLangBtn" type="button">
+      <span class="pi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+      <span class="pi-tx">切换语言</span><span class="pi-sub">Chuyển ngôn ngữ</span>
+    </button>
   </div>
+  <input type="file" id="mediaPhotoInput" accept="image/*" class="hidden" />
+  <input type="file" id="mediaVideoInput" accept="video/*" class="hidden" />
+  <input type="file" id="mediaFileInput" class="hidden" />
   <div class="composer-wrap">
     <div class="composer">
       <textarea id="chatInput" rows="1" maxlength="500" placeholder="用你的语言，聊聊今天吧…" aria-label="消息输入"></textarea>
       <div class="composer-row">
-        <button class="comp-btn" id="chatPlusBtn" type="button" aria-label="更多">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
         <button class="comp-btn" id="chatMicBtn" type="button" aria-label="语音输入">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
         </button>
-        <button class="comp-lang" id="chatLangBtn" type="button" aria-label="切换我说的语言">
+        <button class="comp-btn" id="chatEmojiBtn" type="button" aria-label="表情">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.2c.8 1.1 2 1.7 3.5 1.7s2.7-.6 3.5-1.7"/><circle cx="9" cy="9.6" r=".6" fill="currentColor" stroke="none"/><circle cx="15" cy="9.6" r=".6" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="comp-btn" id="chatPlusBtn" type="button" aria-label="更多">
+          <svg class="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <svg class="ic-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+        <button class="comp-lang" id="chatLangBtn" type="button" aria-label="切换我说的语言" style="display:none">
           <span id="chatLangTxt">中文</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
         </button>
-        <button id="chatSendBtn" type="button">发送
+        <button id="chatSendBtn" type="button" style="display:none">发送
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </button>
       </div>
     </div>
+    <div class="emoji-panel hidden" id="emojiPanel" aria-label="表情"></div>
   </div>
   <div class="chat-foot">双方需保持网页打开 · 聊天记录仅保存在本机</div>
 </div>
@@ -1249,6 +1618,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #eca48c;outline-offset:2p
     <div class="incoming-avatar" id="incomingAvatar">?</div>
     <div class="ic-t1" id="incomingText">有人邀请你通话</div>
     <div class="ic-t2" id="incomingSub">Cuộc gọi đến</div>
+    <div class="ic-hint hidden" id="incomingSoundHint">轻点屏幕一下开启铃声 · Chạm để bật chuông</div>
     <div class="incoming-btns">
       <button id="incomingDeclineBtn" type="button">拒绝 · Từ chối</button>
       <button id="incomingAcceptBtn" type="button">接听 · Nghe</button>
@@ -1300,11 +1670,30 @@ function loadMyName(){
 function saveMyName(){
   try { if (window.localStorage) window.localStorage.setItem(nickStorageKey(), myName); } catch(e){}
 }
+/* 性别 + 自选头像：跟昵称一样存本机（按账号），头像默认用新的男生头像 */
+var myGender = "";
+var myAvatarImg = "";
+function genderStorageKey(){ return "zhyuetong-gender-" + encodeURIComponent(myEmail); }
+function avatarStorageKey(){ return "zhyuetong-avatar-" + encodeURIComponent(myEmail); }
+function loadMyGender(){
+  try { myGender = window.localStorage ? (window.localStorage.getItem(genderStorageKey()) || "") : ""; } catch(e){ myGender = ""; }
+  if (myGender !== "male" && myGender !== "female") myGender = "";
+}
+function saveMyGender(){
+  try { if (window.localStorage) window.localStorage.setItem(genderStorageKey(), myGender); } catch(e){}
+}
+function loadMyAvatarImg(){
+  try { myAvatarImg = window.localStorage ? (window.localStorage.getItem(avatarStorageKey()) || "") : ""; } catch(e){ myAvatarImg = ""; }
+}
+function saveMyAvatarImg(){
+  try { if (window.localStorage) window.localStorage.setItem(avatarStorageKey(), myAvatarImg); } catch(e){}
+}
 function renderMyProfile(){
   var disp = myDisplayName();
   setAvatar($("myAvatar"), myNum);
   $("myNick").textContent = myName || I18N[myLang].noNick;
-  $("myEmailTxt").textContent = myEmail;
+  var nrv = $("nickRowVal"); if (nrv) nrv.textContent = myName || I18N[myLang].noNick;
+  var pc = $("profileFriendCount"); if (pc) pc.textContent = fillTpl(I18N[myLang].friendCountTpl, { n: friends.length });
   var nt = $("myNumTxt"); if (nt) nt.textContent = myNum || I18N[myLang].numGenShort;
   var nt2 = $("friendsNumTxt"); if (nt2) nt2.textContent = myNum || I18N[myLang].numGenShort;
   renderPromoLinks();
@@ -1402,16 +1791,35 @@ var I18N = {
     addFriend: "＋ 添加好友",
     numLabel: "我的号码 · 发给朋友，让对方加你",
     callLogEmpty: "暂无通话记录",
-    myNumLabel: "我的号码：",
+    myNumLabel: "我的好友号",
+    numLabelShort: "好友号：", connectFriend: "＋ 连接好友", friendCountTpl: "{n}位好友",
+    profileEditTitle: "我的资料", genderLabel: "性别", genderMale: "男", genderFemale: "女",
+    nickField: "昵称", emailField: "邮箱", newPassField: "新密码", confirmPassField: "确认密码", numField: "好友号",
+    numWarn: "改了好友号，别人用旧号就找不到你了，要重新加好友。",
+    passPh: "不改请留空",
+    emailInvalid: "邮箱格式不对", passTooShort: "密码至少 6 位", passMismatch: "两次密码不一致", numInvalid: "好友号必须是 6 位数字",
+    emailSent: "确认邮件已发到新邮箱，点开才生效", passChanged: "密码已改", numChanged: "好友号已改，正在重新登录…",
+    profileSaved: "资料已保存", saveFailed: "保存失败，请再试一次",
     editNick: "改昵称", logout: "退出登录",
     noNick: "（还没设昵称）",
     nickLabel: "我的昵称（对方看到的名字）",
     nickPh: "比如：哈哈 · Ví dụ: Ha",
     cancel: "取消", save: "保存",
-    diagTitle: "连接诊断",
-    diagLabels: ["我的号码", "信令频道", "最后一次错误"],
-    diagReconn: "重新连接",
     autoTransLabel: "自动翻译",
+    settingsTitle: "我的中越通译",
+    settingsSub: "你的语言，连接世界的方式。",
+    copyNum: "复制",
+    langRow: "我的语言",
+    notifRow: "消息通知与来电提醒",
+    notifRowVal: "设置 🔔",
+    helpRow: "体验版说明",
+    trialNote: "01 · 先加好友：用对方的好友号添加，双方同时在线就能聊天。<br/>02 · 消息和来电提醒：把网页装到主屏幕后才能收到推送；对方离线时消息会存在服务器，上线后自动取回。<br/>03 · 通话：语音和视频通话都带双语字幕。",
+    inviteRow: "推荐好友",
+    inviteNote: "好友扫码打开中越通译",
+    inviteAddMeTpl: "加我为好友：我的好友号 {num}",
+    inviteCopy: "复制链接",
+    inviteCopied: "链接已复制",
+    homeFoot: "聊天记录保存在当前浏览器。翻译常用语之外的文本会发送至 MyMemory；语音识别由浏览器提供，可能使用浏览器厂商的在线服务。",
     roomFoldTitle: "用房间号通话（备用）",
     createRoom1: "创建房间", createRoom2: "Tạo phòng mới",
     joinRoom1: "加入房间", joinRoom2: "Vào phòng bằng mã",
@@ -1471,6 +1879,8 @@ var I18N = {
     toastNoAnswer: "对方未接听（对方要打开网页才能接）",
     toastFriendOffline: "对方不在线（对方要打开网页）",
     toastFriendOfflinePlain: "对方不在线",
+    mediaTooBig: "文件太大，最大 10MB",
+    mediaOffline: "对方不在线，媒体发不出去",
     stOnline: "在线", stConnecting: "正在连接…", stOffline: "离线",
     chatOff: "离线 · 对方没打开网页",
     chatFail: "连接失败 · 点我重试",
@@ -1493,11 +1903,6 @@ var I18N = {
     inviteSubVoice: "Mời bạn gọi thoại", inviteSubVideo: "Mời bạn gọi video",
     friendReqTpl: "{name}（{num}）想加你为好友",
     friendReqSubDyn: "对方想和你聊天、通话",
-    diagSigOff: "未连接", diagSigOn: "已连接", diagSigWait: "连接中", diagSigFail: "连接失败",
-    diagSigRetryTpl: " · 第 {n} 次重试",
-    diagNone: "无",
-    diagConnected: "已连接", diagConnecting: "连接中",
-    diagOnlineAgoTpl: "{s} 秒前在线", diagOffline: "不在线",
     presenceFailPrefix: "在线状态上报失败：",
     presenceFailNet: "在线状态上报失败（网络）",
     presenceFail: "在线状态上报失败",
@@ -1513,6 +1918,14 @@ var I18N = {
     infoNumTpl: "号码：{num}",
     toastTransOn: "自动翻译已开", toastTransOff: "自动翻译已关，只发原文",
     toastSRFail: "语音识别启动失败",
+    botName: "翻译助手", botTag: "语音翻译助手 · 像 Siri 一样说话",
+    botIntro: "你好，我是翻译助手。现在我能陪你聊天了：问我问题、让我翻译、教我中文或越南语都可以。说中文或越南语都行，点麦克风说话，或者直接打字。",
+    botUpgraded: "我升级了，现在不只会翻译，还能陪你聊天：问我问题、让我解释单词、教你中文越南语都可以。试试问我点什么吧。",
+    botHeardNothing: "没听清，再说一遍吧",
+    botTransFail: "翻译失败了，再试一次吧",
+    botNoMic: "用不了麦克风，请检查权限",
+    botRec: "正在听…",
+    botSpeakOn: "助手语音已开", botSpeakOff: "助手语音已关",
     nickSavedTpl: "昵称已保存，对方会看到「{name}」",
     nickCleared: "昵称已清空，对方看到你的邮箱",
     addFilledTpl: "已填入对方号码 {num}，点「保存」加好友",
@@ -1551,16 +1964,35 @@ var I18N = {
     addFriend: "＋ Thêm bạn bè",
     numLabel: "Số của tôi · Gửi cho bạn bè để họ thêm bạn",
     callLogEmpty: "Chưa có lịch sử cuộc gọi",
-    myNumLabel: "Số của tôi: ",
+    myNumLabel: "Số bạn bè",
+    numLabelShort: "Số bạn bè:", connectFriend: "+ Kết nối bạn bè", friendCountTpl: "{n} bạn bè",
+    profileEditTitle: "Hồ sơ của tôi", genderLabel: "Giới tính", genderMale: "Nam", genderFemale: "Nữ",
+    nickField: "Biệt danh", emailField: "Email", newPassField: "Mật khẩu mới", confirmPassField: "Nhập lại mật khẩu", numField: "Số bạn bè",
+    numWarn: "Đổi số bạn bè rồi, người khác dùng số cũ sẽ không tìm thấy bạn, phải kết bạn lại.",
+    passPh: "Để trống nếu không đổi",
+    emailInvalid: "Email không đúng định dạng", passTooShort: "Mật khẩu ít nhất 6 ký tự", passMismatch: "Mật khẩu nhập lại không khớp", numInvalid: "Số bạn bè phải là 6 chữ số",
+    emailSent: "Đã gửi email xác nhận đến hộp thư mới, mở ra mới có hiệu lực", passChanged: "Đã đổi mật khẩu", numChanged: "Đã đổi số bạn bè, đang đăng nhập lại…",
+    profileSaved: "Đã lưu hồ sơ", saveFailed: "Lưu thất bại, thử lại nhé",
     editNick: "Đổi biệt danh", logout: "Đăng xuất",
     noNick: "（Chưa đặt biệt danh）",
     nickLabel: "Biệt danh của tôi (tên đối phương nhìn thấy)",
     nickPh: "Ví dụ: Ha · 比如：哈哈",
     cancel: "Hủy", save: "Lưu",
-    diagTitle: "Chẩn đoán kết nối",
-    diagLabels: ["Số của tôi", "Kênh tín hiệu", "Lỗi gần nhất"],
-    diagReconn: "Kết nối lại",
     autoTransLabel: "Dịch tự động",
+    settingsTitle: "Trung–Việt của tôi",
+    settingsSub: "Ngôn ngữ của bạn, cách kết nối với thế giới.",
+    copyNum: "Sao chép",
+    langRow: "Ngôn ngữ của tôi",
+    notifRow: "Thông báo tin nhắn và cuộc gọi",
+    notifRowVal: "Cài đặt 🔔",
+    helpRow: "Giới thiệu bản trải nghiệm",
+    trialNote: "01 · Thêm bạn bè trước: thêm bằng số bạn bè của đối phương, cả hai cùng trực tuyến là trò chuyện được.<br/>02 · Thông báo tin nhắn và cuộc gọi: chỉ nhận được sau khi cài trang web lên màn hình chính; tin nhắn gửi khi đối phương ngoại tuyến sẽ được lưu trên máy chủ, họ lên mạng là tự nhận được.<br/>03 · Cuộc gọi: gọi thoại và gọi video đều có phụ đề song ngữ.",
+    inviteRow: "Giới thiệu bạn bè",
+    inviteNote: "Bạn bè quét mã để mở Dịch Trung–Việt",
+    inviteAddMeTpl: "Thêm tôi làm bạn: Số bạn bè của tôi là {num}",
+    inviteCopy: "Sao chép liên kết",
+    inviteCopied: "Đã sao chép liên kết",
+    homeFoot: "Lịch sử trò chuyện được lưu trên trình duyệt hiện tại. Văn bản ngoài các cụm từ dịch thông dụng sẽ được gửi tới MyMemory; nhận dạng giọng nói do trình duyệt cung cấp, có thể dùng dịch vụ trực tuyến của nhà cung cấp trình duyệt.",
     roomFoldTitle: "Gọi bằng mã phòng (dự phòng)",
     createRoom1: "Tạo phòng mới", createRoom2: "创建房间",
     joinRoom1: "Vào phòng bằng mã", joinRoom2: "加入房间",
@@ -1620,6 +2052,8 @@ var I18N = {
     toastNoAnswer: "Đối phương không nghe máy (đối phương cần mở trang web mới nghe được)",
     toastFriendOffline: "Đối phương không trực tuyến (đối phương cần mở trang web)",
     toastFriendOfflinePlain: "Đối phương không trực tuyến",
+    mediaTooBig: "Tệp quá lớn, tối đa 10 MB",
+    mediaOffline: "Bạn bè ngoại tuyến, không gửi được",
     stOnline: "Trực tuyến", stConnecting: "Đang kết nối…", stOffline: "Ngoại tuyến",
     chatOff: "Ngoại tuyến · Đối phương chưa mở trang web",
     chatFail: "Kết nối thất bại · Bấm để thử lại",
@@ -1642,11 +2076,6 @@ var I18N = {
     inviteSubVoice: "邀请你语音通话", inviteSubVideo: "邀请你视频通话",
     friendReqTpl: "{name} ({num}) muốn kết bạn với bạn",
     friendReqSubDyn: "Đối phương muốn trò chuyện và gọi điện với bạn",
-    diagSigOff: "Chưa kết nối", diagSigOn: "Đã kết nối", diagSigWait: "Đang kết nối", diagSigFail: "Kết nối thất bại",
-    diagSigRetryTpl: " · Lần thử lại thứ {n}",
-    diagNone: "Không có",
-    diagConnected: "Đã kết nối", diagConnecting: "Đang kết nối",
-    diagOnlineAgoTpl: "Trực tuyến {s} giây trước", diagOffline: "Không trực tuyến",
     presenceFailPrefix: "Báo cáo trạng thái trực tuyến thất bại: ",
     presenceFailNet: "Báo cáo trạng thái trực tuyến thất bại (mạng)",
     presenceFail: "Báo cáo trạng thái trực tuyến thất bại",
@@ -1662,6 +2091,14 @@ var I18N = {
     infoNumTpl: "Số: {num}",
     toastTransOn: "Đã bật dịch tự động", toastTransOff: "Đã tắt dịch tự động, chỉ gửi bản gốc",
     toastSRFail: "Khởi động nhận dạng giọng nói thất bại",
+    botName: "Trợ lý dịch", botTag: "Trợ lý dịch bằng giọng nói",
+    botIntro: "Xin chào, tôi là Trợ lý dịch. Giờ tôi có thể trò chuyện với bạn: hỏi tôi, nhờ tôi dịch, học tiếng Trung hay tiếng Việt đều được. Nói tiếng Trung hay tiếng Việt đều được, nhấn mic để nói hoặc gõ chữ.",
+    botUpgraded: "Tôi đã được nâng cấp, giờ không chỉ dịch mà còn có thể trò chuyện: hỏi tôi, nhờ tôi giải thích từ, học tiếng Trung hay tiếng Việt đều được. Thử hỏi tôi điều gì đó nhé.",
+    botHeardNothing: "Tôi nghe không rõ, bạn nói lại nhé",
+    botTransFail: "Dịch thất bại, thử lại nhé",
+    botNoMic: "Không dùng được mic, hãy kiểm tra quyền",
+    botRec: "Đang nghe…",
+    botSpeakOn: "Đã bật giọng nói của trợ lý", botSpeakOff: "Đã tắt giọng nói của trợ lý",
     nickSavedTpl: "Đã lưu biệt danh, đối phương sẽ thấy «{name}»",
     nickCleared: "Đã xóa biệt danh, đối phương sẽ thấy email của bạn",
     addFilledTpl: "Đã điền số {num} của đối phương, bấm «Lưu» để kết bạn",
@@ -1808,24 +2245,42 @@ function applyUiLang(){
   tx(q("#tabCalls .page-title"), t.tabCalls);
   tx($("callLogEmpty"), t.callLogEmpty);
   /* 设置页：资料卡 */
-  txFirst(q(".profile-num"), t.myNumLabel);
-  tx($("editNickBtn"), t.editNick);
-  tx($("logoutBtn"), t.logout);
+  tx($("myNumLabel"), t.numLabelShort);
+  tx($("profileAddFriendBtn"), t.connectFriend);
   if (!myName) tx($("myNick"), t.noNick);
-  /* 设置页：改昵称面板 */
-  tx(q("#nickPanel .np-label"), t.nickLabel);
-  ph($("nickInput"), t.nickPh);
-  tx($("nickCancelBtn"), t.cancel);
-  tx($("nickSaveBtn"), t.save);
-  /* 设置页：连接诊断卡（只刷 label，不动 renderDiag 写的数值） */
-  tx(q("#diagCard .dc-title"), t.diagTitle);
-  var dks = qa("#diagCard .dk");
-  for (var di = 0; di < dks.length && di < t.diagLabels.length; di++) dks[di].textContent = t.diagLabels[di];
-  tx($("diagReconnBtn"), t.diagReconn);
+  /* 设置页：资料编辑面板 */
+  tx($("peTitle"), t.profileEditTitle);
+  tx($("peGenderLabel"), t.genderLabel);
+  tx($("peGenderMale"), t.genderMale);
+  tx($("peGenderFemale"), t.genderFemale);
+  tx($("peNickLabel"), t.nickField);
+  tx($("peEmailLabel"), t.emailField);
+  tx($("pePassLabel"), t.newPassField);
+  tx($("pePass2Label"), t.confirmPassField);
+  tx($("peNumLabel"), t.numField);
+  tx($("peNumWarn"), t.numWarn);
+  ph($("pePassInput"), t.passPh);
+  tx($("peCancelBtn"), t.cancel);
+  tx($("peSaveBtn"), t.save);
   /* 设置页：语言卡 / 自动翻译卡 */
   var lcs = qa(".lang-card .lc-label");
   if (lcs[0]) lcs[0].textContent = t.myLangLabel;
   if (lcs[1]) lcs[1].textContent = t.autoTransLabel;
+  /* 设置页：第 17 轮加的行，第 19 轮接上翻译（之前是写死的中文，选越南语也不变） */
+  tx(q(".settings-head h1"), t.settingsTitle);
+  tx(q(".settings-head p"), t.settingsSub);
+  txFirst($("langRowBtn"), t.langRow);
+  txFirst($("notifRowBtn"), t.notifRow);
+  tx($("notifRowVal"), t.notifRowVal);
+  txFirst($("helpRowBtn"), t.helpRow);
+  tx($("logoutRowBtn"), t.logout);
+  var tp = q("#trialPanel p"); if (tp) tp.innerHTML = t.trialNote;
+  /* 设置页：推荐好友（第 28 轮） */
+  txFirst($("inviteRowBtn"), t.inviteRow);
+  tx($("inviteNote"), t.inviteNote);
+  tx($("inviteCopyBtn"), t.inviteCopy);
+  var iam = $("inviteAddMe"); if (iam) iam.textContent = fillTpl(t.inviteAddMeTpl, { num: myNum || "······" });
+  tx(q(".home-foot"), t.homeFoot);
   /* 设置页：房间号备用 */
   var rfb = $("roomFoldBtn"); if (rfb) tx(rfb.querySelector("span"), t.roomFoldTitle);
   tx(q("#createBtn .b1"), t.createRoom1);
@@ -1926,6 +2381,7 @@ function renderLangUI(){
   var zh = $("homeLangZh"), vi = $("homeLangVi");
   if (zh) zh.classList.toggle("sel", myLang === "zh");
   if (vi) vi.classList.toggle("sel", myLang === "vi");
+  var lrv = $("langRowVal"); if (lrv) lrv.textContent = myLang === "zh" ? "简体中文" : "Tiếng Việt";
   var topSel = $("topLangSel");
   if (topSel && topSel.value !== myLang) topSel.value = myLang;
   $("chatLangTxt").textContent = myLang === "zh" ? "中文" : "Tiếng Việt";
@@ -1953,12 +2409,32 @@ $("chatLangBtn").addEventListener("click", function(){
 renderLangUI();
 
 /* ================= TTS 朗读 ================= */
+/* 选声音：别拿第一个就用——iOS 第一个中文语音常常是台湾/香港腔或压缩音质，听着别扭。
+   优先顺序：大陆普通话 (zh-CN) > 晓晓/云扬/婷婷等自然音色 > 已下载到本机的 > 其他中文 */
 function pickVoice(langPrefix){
   try {
     var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    var best = null, bestScore = -1;
     for (var i = 0; i < voices.length; i++){
-      if (voices[i].lang && voices[i].lang.toLowerCase().indexOf(langPrefix) === 0) return voices[i];
+      var v = voices[i];
+      if (!v.lang || v.lang.toLowerCase().indexOf(langPrefix) !== 0) continue;
+      var score = 0;
+      var lang = v.lang.toLowerCase();
+      var name = (v.name || "").toLowerCase();
+      if (langPrefix === "zh"){
+        if (lang === "zh-cn") score += 10;
+        else if (lang === "zh-tw" || lang === "zh-hk") score -= 5;
+        if (name.indexOf("xiaoxiao") >= 0 || name.indexOf("晓晓") >= 0) score += 8;
+        else if (name.indexOf("yunyang") >= 0 || name.indexOf("云扬") >= 0) score += 7;
+        else if (name.indexOf("tingting") >= 0 || name.indexOf("婷婷") >= 0) score += 5;
+        else if (name.indexOf("xiaohan") >= 0 || name.indexOf("晓涵") >= 0) score += 5;
+        if (name.indexOf("enhanced") >= 0 || name.indexOf("premium") >= 0 || name.indexOf("natural") >= 0) score += 4;
+      }
+      if (v.localService) score += 2;
+      if (v.default) score += 1;
+      if (score > bestScore){ bestScore = score; best = v; }
     }
+    return best;
   } catch(e){}
   return null;
 }
@@ -1982,6 +2458,68 @@ function speakAlways(text, lang){
   var keep = autoSpeak; autoSpeak = true;
   speak(text, lang);
   autoSpeak = keep;
+}
+
+/* 云端语音（Google 朗读）：机器人回话先走云端真人声（中越都一个固定好声音，不用再靠手机里有没有装好语音），
+   云端拿不到就回落到手机自带语音。长句子按句切成小段，一段一段放。 */
+var cloudAudio = null;
+var cloudAudioSeq = 0;
+function stopSpeakCloud(){
+  cloudAudioSeq++;
+  if (cloudAudio){ try { cloudAudio.pause(); } catch(e){} cloudAudio = null; }
+}
+function cloudTtsChunks(text){
+  var s = String(text || "").replace(/\s+/g, " ").trim();
+  if (!s) return [];
+  var sentences = s.match(/[^。！？；.!?;]+[。！？；.!?;]*/g) || [s];
+  var chunks = [], cur = "";
+  sentences.forEach(function(sn){
+    var pieces = [sn];
+    if (sn.length > 150){
+      pieces = sn.match(/[^，,、]+[，,、]*/g) || [sn];
+      var hard = [];
+      pieces.forEach(function(p){
+        while (p.length > 150){ hard.push(p.slice(0, 150)); p = p.slice(150); }
+        if (p) hard.push(p);
+      });
+      pieces = hard;
+    }
+    pieces.forEach(function(piece){
+      if ((cur + piece).length > 150 && cur){ chunks.push(cur); cur = ""; }
+      cur += piece;
+      if (cur.length >= 150){ chunks.push(cur); cur = ""; }
+    });
+  });
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+function speakCloud(text, lang){
+  if (!text) return;
+  var tl = lang === "zh" ? "zh-CN" : "vi-VN";
+  var chunks = cloudTtsChunks(text);
+  if (!chunks.length){ speakAlways(text, lang); return; }
+  stopSpeakCloud();
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
+  var seq = ++cloudAudioSeq;
+  var idx = 0, failed = false;
+  function playNext(){
+    if (seq !== cloudAudioSeq) return;
+    if (idx >= chunks.length){ cloudAudio = null; return; }
+    var url = "https://translate.google.com/translate_tts?ie=UTF-8&tl=" + tl + "&client=tw-ob&q=" + encodeURIComponent(chunks[idx]);
+    var a = new Audio(url);
+    cloudAudio = a;
+    a.onended = function(){ idx++; playNext(); };
+    a.onerror = function(){
+      if (seq !== cloudAudioSeq) return;
+      cloudAudio = null;
+      if (idx === 0 && !failed){ failed = true; speakAlways(text, lang); }
+    };
+    var p = a.play();
+    if (p && p.catch) p.catch(function(){
+      if (seq === cloudAudioSeq && idx === 0 && !failed){ failed = true; cloudAudio = null; speakAlways(text, lang); }
+    });
+  }
+  playNext();
 }
 
 /* ================= 翻译链：Gemini 端点 → Google → MyMemory ================= */
@@ -2070,8 +2608,44 @@ function translateViaGoogle(text, from, to){
       return out;
     });
 }
+function translateViaWorker(text, from, to){
+  if (!OFFLINE_API) return Promise.reject(new Error("no worker"));
+  var tokenP = offlineToken();
+  var tokenTimeout = new Promise(function(resolve){ setTimeout(function(){ resolve(""); }, 3000); });
+  return Promise.race([tokenP, tokenTimeout]).then(function(token){
+    var headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = "Bearer " + token;
+    return new Promise(function(resolve, reject){
+      var done = false;
+      var ctl = ("AbortController" in window) ? new AbortController() : null;
+      var timer = setTimeout(function(){
+        if (done) return; done = true;
+        if (ctl){ try { ctl.abort(); } catch(e){} }
+        reject(new Error("worker translate timeout"));
+      }, 12000);
+      fetch(OFFLINE_API + "/translate", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({ text: text, from: from, to: to }),
+        signal: ctl ? ctl.signal : undefined
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (done) return; done = true; clearTimeout(timer);
+          var out = j && j.translation ? String(j.translation).trim() : "";
+          if (badTranslation(out, text)) throw new Error("bad worker translation");
+          resolve(out);
+        })
+        .catch(function(err){
+          if (done) return; done = true; clearTimeout(timer); reject(err);
+        });
+    });
+  });
+}
 function translateText(text, from, to){
   return translateViaServer(text, from, to).catch(function(){
+    return translateViaWorker(text, from, to);
+  }).catch(function(){
     return translateViaGoogle(text, from, to);
   }).catch(function(){
     return translateViaMyMemory(text, from, to);
@@ -2389,7 +2963,7 @@ function renderSpeakerUI(){
 $("speakerBtn").addEventListener("click", function(){
   autoSpeak = !autoSpeak;
   renderSpeakerUI();
-  if (!autoSpeak && "speechSynthesis" in window){ try { window.speechSynthesis.cancel(); } catch(e){} }
+  if (!autoSpeak){ stopSpeakCloud(); if ("speechSynthesis" in window){ try { window.speechSynthesis.cancel(); } catch(e){} } }
   toast(autoSpeak ? I18N[myLang].toastSpeakOn : I18N[myLang].toastSpeakOff);
 });
 renderSpeakerUI();
@@ -3186,75 +3760,21 @@ function presenceFresh(num){
 }
 /* ================= 连接诊断（设置页可见卡片） ================= */
 var diagLastErr = null; /* {type, detail, ts} */
-function fmtDiagTime(ts){
-  var d = new Date(ts);
-  function p(n){ return (n < 10 ? "0" : "") + n; }
-  return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
-}
 function noteDiagError(type, detail){
   diagLastErr = { type: type || "unknown", detail: detail || "", ts: Date.now() };
   renderDiag();
 }
+/* 连接状态只剩头像下面的小标签：诊断卡和好友连接那行都去掉了，这里只刷小标签 */
 function renderDiag(){
-  var numEl = $("diagNum");
-  if (!numEl) return;
-  numEl.textContent = myNum || "—";
-  var dt = I18N[myLang] || I18N.zh;
-  var st;
-  if (!myNum) st = dt.diagSigOff;
-  else if (signalState === "connected") st = dt.diagSigOn;
-  else if (signalState === "failed") st = dt.diagSigFail + (signalRetryCount > 0 ? fillTpl(dt.diagSigRetryTpl, { n: signalRetryCount }) : "");
-  else st = dt.diagSigWait + (signalRetryCount > 0 ? fillTpl(dt.diagSigRetryTpl, { n: signalRetryCount }) : "");
-  $("diagSignalState").textContent = st;
-  var errEl = $("diagLastErr");
-  if (diagLastErr){
-    errEl.textContent = diagLastErr.type + (diagLastErr.detail ? "：" + diagLastErr.detail : "") + "（" + fmtDiagTime(diagLastErr.ts) + "）";
-    errEl.classList.add("err");
-  } else {
-    errEl.textContent = dt.diagNone;
-    errEl.classList.remove("err");
-  }
-  var box = $("diagFriends");
-  if (box){
-    box.innerHTML = "";
-    friends.forEach(function(f){
-      var row = document.createElement("div");
-      row.className = "diag-row";
-      var k = document.createElement("span");
-      k.className = "dk";
-      k.textContent = f.name || f.user;
-      var v = document.createElement("span");
-      v.className = "dv";
-      if (chatConns[f.user] && chatConns[f.user].open){
-        v.textContent = dt.diagConnected;
-      } else if (chatConnecting[f.user]){
-        v.textContent = dt.diagConnecting;
-      } else if (presenceFresh(f.user)){
-        v.textContent = fillTpl(dt.diagOnlineAgoTpl, { s: presenceAgeSec(f.user) });
-      } else {
-        v.textContent = dt.diagOffline;
-      }
-      row.appendChild(k);
-      row.appendChild(v);
-      box.appendChild(row);
-    });
-  }
+  var st = signalState === "connected" && myNum ? (myLang === "zh" ? "已上线" : "Đã kết nối")
+    : (myNum ? (myLang === "zh" ? "连接中" : "Đang kết nối")
+    : (myLang === "zh" ? "未连接" : "Chưa kết nối"));
+  var cp = $("connPill"), cpt = $("connPillTxt");
+  var connState = (signalState === "connected" && myNum) ? "on" : (myNum ? "wait" : "off");
+  if (cp) cp.className = "status-pill" + (connState === "on" ? " on" : (connState === "wait" ? " wait" : ""));
+  if (cpt) cpt.textContent = st;
 }
 var pendingInvite = null;
-/* 诊断卡「重新连接」：关掉信令频道和已有聊天连接、退避归零，重新订阅；
-   订上后自动重新上报 presence、把已有好友逐个重连。登录、号码、好友列表都不动。 */
-function manualReconnect(){
-  destroySignal();
-  if (sessionPc){ try { sessionPc.close(); } catch(e){} sessionPc = null; }
-  conn = null; connAttempt = null;
-  signalRetryCount = 0;
-  renderDiag();
-  if (!entered || !myNum){ toast(I18N[myLang].toastNotReady); return; }
-  presenceCache = {};
-  initSignal();
-  toast(I18N[myLang].toastReconnecting);
-}
-$("diagReconnBtn").addEventListener("click", manualReconnect);
 function learnFriendName(user, name){
   if (!user || !name) return;
   name = String(name).replace(/^\s+|\s+$/g, "");
@@ -3307,6 +3827,7 @@ function onCallAnswer(from, sdp){
   callAnswerSdp = sdp;
   if (!userCallAnswered){
     userCallAnswered = true;
+    ringStop();
     markCallLogAnswered();
     clearTimeout(userCallTimer);
     clearTimeout(offerCheckTimer);
@@ -3333,6 +3854,12 @@ function onCallCancel(from){
     modalQueue = modalQueue.filter(function(m){ return m.kind !== "call"; });
     if (wasShowing) hideCallInviteOverlay();
     toast(I18N[myLang].toastCallCancelled);
+    return;
+  }
+  /* 对方在已接通后挂断、但发的是 call-cancel（比如对方还没收到接听确认）：同样当作对方挂断 */
+  if (started && sessionKind === "user" && userCallTarget === from){
+    hangupFromRemote = true;
+    hangupCore();
   }
 }
 function onCallEnd(from){
@@ -3427,7 +3954,90 @@ function startUserCall(f, mode){
     if (stream){ mediaResume = null; dialUserCall(f); }
   });
 }
+/* ================= 来电铃声和拨出回铃音（第 18 轮） ================= */
+/* 网页里没有现成的铃声，用 Web Audio 自己合成：来电是木琴音阶（C 大调五声音阶上行），拨出是“嘟——、停”。
+   iOS 要求音频必须在用户点过页面之后才能出声，所以第一次点按就解锁音频；如果来电时页面
+   还没被点过（比如刚从推送点进来），铃声可能出不来，只能看到来电界面和推送，这是网页的限制。 */
+var ringCtx = null, ringOsc = null, ringGain = null, ringTimer = null, ringStep = 0;
+function ringUnlock(){
+  try {
+    if (!ringCtx) ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ringCtx.state === "suspended") ringCtx.resume();
+  } catch(e){}
+}
+["pointerdown", "touchstart"].forEach(function(ev){
+  window.addEventListener(ev, ringUnlock, { passive: true });
+});
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) ringUnlock(); });
+function ringStart(kind){
+  ringStop();
+  try {
+    ringUnlock();
+    if (!ringCtx) return;
+    var osc = ringCtx.createOscillator();
+    var gain = ringCtx.createGain();
+    gain.gain.value = 0;
+    osc.type = "sine";
+    osc.connect(gain);
+    gain.connect(ringCtx.destination);
+    osc.start();
+    ringOsc = osc;
+    ringGain = gain;
+    if (kind === "in"){
+      /* 来电改成木琴音阶：C 大调五声音阶上行（523→1046Hz），每个音短促衰减，像敲木琴 */
+      var notes = [[523, 280], [587, 280], [659, 280], [784, 280], [880, 280], [1046, 500]];
+      var pause = 1000;
+      ringStep = 0;
+      (function next(){
+        if (!ringOsc) return;
+        var idx = ringStep % notes.length;
+        var f = notes[idx][0], d = notes[idx][1];
+        var t = ringCtx.currentTime;
+        try {
+          osc.frequency.setValueAtTime(f, t);
+          gain.gain.cancelScheduledValues(t);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + d / 1000);
+        } catch(e){}
+        ringStep++;
+        ringTimer = setTimeout(next, d + (idx === notes.length - 1 ? pause : 80));
+      })();
+    } else {
+      /* 拨出回铃音：450Hz“嘟——”不变 */
+      osc.frequency.value = 450;
+      var pattern = [1000, 3000];
+      ringStep = 0;
+      (function next(){
+        if (!ringOsc) return;
+        var on = ringStep % 2 === 0;
+        var dur = pattern[ringStep % pattern.length];
+        try {
+          if (on) ringGain.gain.setTargetAtTime(0.25, ringCtx.currentTime, 0.02);
+          else ringGain.gain.setTargetAtTime(0, ringCtx.currentTime, 0.02);
+        } catch(e){}
+        ringStep++;
+        ringTimer = setTimeout(next, dur);
+      })();
+    }
+    try { if (navigator.vibrate) navigator.vibrate(kind === "in" ? [200, 100, 200] : 200); } catch(e){}
+  } catch(e){}
+}
+function ringStop(){
+  try { if (ringTimer){ clearTimeout(ringTimer); ringTimer = null; } } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate(0); } catch(e){}
+  var osc = ringOsc, gain = ringGain;
+  ringOsc = null;
+  ringGain = null;
+  ringStep = 0;
+  if (osc){
+    try { if (gain) gain.gain.setTargetAtTime(0, ringCtx.currentTime, 0.02); } catch(e){}
+    setTimeout(function(){ try { osc.stop(); } catch(e){} }, 120);
+  }
+}
+
 function dialUserCall(f){
+  ringStart("out");
   startListeningSession();
   if (signalState !== "connected"){
     toast(I18N[myLang].toastConnFail);
@@ -3458,6 +4068,7 @@ function dialUserCall(f){
       if (userCallAnswered) return;
       if (info && callOfferSdp){
         sendSignalTo(target, { type: "call-offer", from: myNum, name: myDisplayName(), mode: callMode, sdp: callOfferSdp });
+        offlineCallPush(target, callMode);
         armOfferCheck();
       }
     });
@@ -3477,6 +4088,7 @@ function dialUserCall(f){
       callOfferSdp = offer.sdp;
       callOffered = true;
       sendSignalTo(target, { type: "call-offer", from: myNum, name: myDisplayName(), mode: callMode, sdp: offer.sdp });
+      offlineCallPush(target, callMode);
       armOfferCheck();
     }).catch(function(){
       toast(I18N[myLang].toastConnFail);
@@ -3592,67 +4204,253 @@ function mulberry32(a){
     return ((t^t>>>14)>>>0)/4294967296;
   };
 }
-function animeAvatarSVG(seedStr){
-  var rnd=mulberry32(hashSeed(seedStr));
-  var pick=function(arr){ return arr[Math.floor(rnd()*arr.length)]; };
-  var hair=pick(["#f4a7b9","#7fb3e8","#b39ddb","#f2a65a","#3d3d4d","#f2d06b","#7fcf9f","#e86a6a","#8ecae6","#c084fc"]);
-  var iris=pick(["#6b4a2f","#4a90d9","#4caf7d","#8e6cc8","#d9932c","#3aa7a3"]);
-  var skin=pick(["#ffe3c8","#ffd9b3","#f5c99b","#ffe9d6"]);
-  var bg=pick(["#fde8e8","#e3f0fb","#efe7f7","#fff3d6","#e2f3e6","#ffeef5","#e8f6f6"]);
-  var shirt=pick(["#ffffff","#ffd166","#a8d8ea","#ffb3c1","#c8e6c9"]);
-  var style=Math.floor(rnd()*5); /* 0 长发 1 波波头 2 双马尾 3 短发碎发 4 发髻 */
-  var acc=Math.floor(rnd()*4); /* 0 无 1 发卡 2 眼镜 3 猫耳 */
-  var s="";
-  s+='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">';
-  s+='<rect width="120" height="120" fill="'+bg+'"/>';
-  s+='<path d="M28 120 C30 104 44 98 60 98 C76 98 90 104 92 120 Z" fill="'+shirt+'" opacity="0.9"/>';
-  if(acc===3){
-    s+='<path d="M40 32 L34 10 L54 24 Z" fill="'+hair+'"/><path d="M80 32 L86 10 L66 24 Z" fill="'+hair+'"/>';
-    s+='<path d="M41 28 L38 16 L49 24 Z" fill="#f7a8b8"/><path d="M79 28 L82 16 L71 24 Z" fill="#f7a8b8"/>';
-  }
-  if(style===0){
-    s+='<path d="M26 62 C22 26 40 16 60 16 C80 16 98 26 94 62 L96 112 L76 112 C78 92 76 82 72 74 L48 74 C44 82 42 92 44 112 L24 112 Z" fill="'+hair+'"/>';
-  }else if(style===1){
-    s+='<path d="M26 66 C22 28 40 16 60 16 C80 16 98 28 94 66 C94 84 88 96 78 100 L42 100 C32 96 26 84 26 66 Z" fill="'+hair+'"/>';
-  }else if(style===2){
-    s+='<circle cx="16" cy="86" r="15" fill="'+hair+'"/><circle cx="104" cy="86" r="15" fill="'+hair+'"/>';
-    s+='<circle cx="25" cy="66" r="4.5" fill="#ff8fab"/><circle cx="95" cy="66" r="4.5" fill="#ff8fab"/>';
-    s+='<path d="M30 60 C28 28 42 16 60 16 C78 16 92 28 90 60 C86 44 82 40 78 48 L42 48 C38 40 34 44 30 60 Z" fill="'+hair+'"/>';
-  }else if(style===3){
-    s+='<path d="M28 62 L24 44 L34 50 L34 34 L44 44 L48 28 L58 40 L64 26 L70 40 L80 30 L82 46 L92 38 L90 54 L96 52 L92 66 C88 48 82 44 78 52 L42 52 C38 44 32 48 28 62 Z" fill="'+hair+'"/>';
-  }else{
-    s+='<circle cx="60" cy="14" r="11" fill="'+hair+'"/>';
-    s+='<path d="M30 60 C28 28 42 16 60 16 C78 16 92 28 90 60 C86 44 82 40 78 48 L42 48 C38 40 34 44 30 60 Z" fill="'+hair+'"/>';
-  }
-  s+='<circle cx="33" cy="74" r="5.5" fill="'+skin+'"/><circle cx="87" cy="74" r="5.5" fill="'+skin+'"/>';
-  s+='<ellipse cx="60" cy="70" rx="27" ry="30" fill="'+skin+'"/>';
-  s+='<path d="M32 66 C30 36 44 26 60 26 C76 26 90 36 88 66 C85 52 80 48 76 56 C72 46 66 44 60 52 C54 44 48 46 44 56 C40 48 35 52 32 66 Z" fill="'+hair+'"/>';
-  s+='<path d="M32 62 C30 78 32 88 34 94 L38 92 C36 82 35 72 36 62 Z" fill="'+hair+'"/>';
-  s+='<path d="M88 62 C90 78 88 88 86 94 L82 92 C84 82 85 72 84 62 Z" fill="'+hair+'"/>';
-  s+='<path d="M41 58 Q47 55.5 53 58" stroke="'+hair+'" stroke-width="2" fill="none" stroke-linecap="round"/>';
-  s+='<path d="M67 58 Q73 55.5 79 58" stroke="'+hair+'" stroke-width="2" fill="none" stroke-linecap="round"/>';
-  s+='<ellipse cx="47" cy="72" rx="7" ry="9" fill="#ffffff"/>';
-  s+='<ellipse cx="73" cy="72" rx="7" ry="9" fill="#ffffff"/>';
-  s+='<circle cx="47" cy="73" r="5" fill="'+iris+'"/><circle cx="73" cy="73" r="5" fill="'+iris+'"/>';
-  s+='<circle cx="47" cy="73" r="2.4" fill="#2b2b2b"/><circle cx="73" cy="73" r="2.4" fill="#2b2b2b"/>';
-  s+='<circle cx="49" cy="70" r="1.6" fill="#ffffff"/><circle cx="75" cy="70" r="1.6" fill="#ffffff"/>';
-  s+='<path d="M40 64 Q47 60.5 54 64" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
-  s+='<path d="M66 64 Q73 60.5 80 64" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
-  s+='<ellipse cx="40" cy="82" rx="5" ry="3" fill="#f7a8a0" opacity="0.55"/>';
-  s+='<ellipse cx="80" cy="82" rx="5" ry="3" fill="#f7a8a0" opacity="0.55"/>';
-  s+='<circle cx="60" cy="82" r="1.2" fill="#e8a87c"/>';
-  s+='<path d="M55 88 Q60 92 65 88" stroke="#c96f5a" stroke-width="1.8" fill="none" stroke-linecap="round"/>';
-  if(acc===1){
-    s+='<g transform="rotate(-18 84 40)"><rect x="78" y="36" width="12" height="4" rx="2" fill="#ffd166"/><circle cx="90" cy="38" r="3" fill="#ff8fab"/></g>';
-  }else if(acc===2){
-    s+='<g stroke="#3d3d4d" stroke-width="1.8" fill="rgba(255,255,255,0.18)"><circle cx="47" cy="72" r="10"/><circle cx="73" cy="72" r="10"/><path d="M57 72 L63 72" fill="none"/></g>';
-  }
-  s+='</svg>';
-  return s;
-}
+/* 头像：按号码固定分到 4 张 3D 风头像（男 2 张、女 2 张，和新 logo 同风格）；同一号码在所有手机上显示同一张。 */
+var AVATAR_IMGS=["avatar-m1.jpg","avatar-m2.jpg","avatar-f1.jpg","avatar-f2.jpg"];
 function setAvatar(el, seedStr){
   if(!el) return;
-  try{ el.innerHTML=animeAvatarSVG(seedStr); }catch(e){}
+  try{
+    if (seedStr === BOT_USER){
+      el.innerHTML='<img src="icon-512.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit">';
+      return;
+    }
+    if (seedStr && myNum && seedStr === myNum){
+      var mine = myAvatarImg || "avatar-ha.jpg";
+      el.innerHTML='<img src="'+mine+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit">';
+      return;
+    }
+    var idx=hashSeed(seedStr||"0")%AVATAR_IMGS.length;
+    el.innerHTML='<img src="'+AVATAR_IMGS[idx]+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit">';
+  }catch(e){}
+}
+
+/* ================= 翻译助手机器人（像 Siri 一样说话的翻译助手） =================
+   内置的虚拟好友，不存在 friends 数组里，打开就一直在；发给它的消息不走点对点，
+   直接调翻译链回答，并用手机语音朗读出来。语音输入用录音 + Worker 的 Whisper 识别，
+   因为 iPhone 浏览器没有内置语音识别。 */
+var BOT_USER = "000000";
+function botFriend(){
+  var t = I18N[myLang] || I18N.zh;
+  return { user: BOT_USER, name: t.botName, bot: true };
+}
+function botLastEntry(){
+  var h = loadChatHistory(histKey(BOT_USER));
+  return h.length ? h[h.length - 1] : null;
+}
+function botSpeakOn(){
+  try {
+    var v = window.localStorage ? window.localStorage.getItem("zhyuetong-bot-speak-" + encodeURIComponent(myEmail)) : null;
+    return v !== "0";
+  } catch(e){ return true; }
+}
+function renderBotSpeakBtn(){
+  var b = $("botSpeakBtn");
+  if (!b) return;
+  var on = botSpeakOn();
+  b.textContent = on ? "🔊" : "🔇";
+  b.classList.toggle("off", !on);
+  b.style.display = (chatFriend && chatFriend.bot) ? "" : "none";
+}
+function setBotSpeak(on){
+  try { if (window.localStorage) window.localStorage.setItem("zhyuetong-bot-speak-" + encodeURIComponent(myEmail), on ? "1" : "0"); } catch(e){}
+  if (!on){ stopSpeakCloud(); try { window.speechSynthesis.cancel(); } catch(e){} }
+  renderBotSpeakBtn();
+  toast((I18N[myLang] || I18N.zh)[on ? "botSpeakOn" : "botSpeakOff"]);
+}
+$("botSpeakBtn").addEventListener("click", function(){ setBotSpeak(!botSpeakOn()); });
+function seedBotIntro(){
+  var code = histKey(BOT_USER);
+  if (loadChatHistory(code).length) return false;
+  var t = I18N[myLang] || I18N.zh;
+  appendChatHistory(code, {
+    dir: "in", orig: t.botIntro, trans: "", from: myLang,
+    ts: Date.now(), id: ++msgSeq, sess: mySess
+  });
+  return true;
+}
+function botUpgradedShown(){
+  try { return window.localStorage && window.localStorage.getItem("zhyuetong-bot-v2-" + encodeURIComponent(myEmail)) === "1"; } catch(e){ return true; }
+}
+function setBotUpgradedShown(){
+  try { if (window.localStorage) window.localStorage.setItem("zhyuetong-bot-v2-" + encodeURIComponent(myEmail), "1"); } catch(e){}
+}
+function seedBotUpgraded(){
+  if (botUpgradedShown()) return;
+  var t = I18N[myLang] || I18N.zh;
+  appendChatHistory(histKey(BOT_USER), {
+    dir: "in", orig: t.botUpgraded, trans: "", from: myLang,
+    ts: Date.now(), id: ++msgSeq, sess: mySess
+  });
+  setBotUpgradedShown();
+}
+function detectLang(s){
+  /* 机器人回的可能是中文也可能是越南语（用户要求换语言时）：含汉字就是中文，否则按越南语算 */
+  return /[\u4e00-\u9fff]/.test(s || "") ? "zh" : "vi";
+}
+function botUserEntry(text){
+  var entry = {
+    dir: "me", orig: text, trans: "", from: detectLang(text),
+    ts: Date.now(), id: ++msgSeq, sess: mySess, pending: true
+  };
+  var els = appendChatMsgEl(entry);
+  appendChatHistory(histKey(BOT_USER), entry);
+  return { entry: entry, els: els };
+}
+function saveBotUserEntry(entry){
+  var code = histKey(BOT_USER);
+  var arr = loadChatHistory(code);
+  for (var i = arr.length - 1; i >= 0; i--){
+    if (arr[i].id === entry.id){ arr[i] = entry; break; }
+  }
+  saveChatHistory(code, arr);
+}
+function botSay(orig, trans, from){
+  var reply = {
+    dir: "in", orig: orig, trans: trans || "", from: from || myLang,
+    ts: Date.now(), id: ++msgSeq, sess: mySess,
+    speak: orig, speakLang: from || myLang
+  };
+  appendChatMsgEl(reply);
+  appendChatHistory(histKey(BOT_USER), reply);
+  if (botSpeakOn()) speakCloud(orig, from || myLang);
+}
+function botChat(){
+  var hist = loadChatHistory(histKey(BOT_USER)).slice(-8);
+  var messages = [];
+  hist.forEach(function(e){
+    if (!e.orig) return;
+    messages.push({ role: e.dir === "me" ? "user" : "assistant", content: String(e.orig).slice(0, 1000) });
+  });
+  if (!messages.length) return Promise.reject(new Error("no history"));
+  return fetchJsonPost(OFFLINE_API + "/chat", { messages: messages, lang: myLang }, 30000)
+    .then(function(j){
+      var r = j && j.reply ? String(j.reply).trim() : "";
+      if (!r) throw new Error("empty chat reply");
+      return r;
+    });
+}
+function botAnswer(text, userEls){
+  var t = I18N[myLang] || I18N.zh;
+  /* 用户这句话实际是什么语言（他也可能用另一种语言写），翻译方向按实际语言来 */
+  var uLang = (userEls && userEls.entry && userEls.entry.from) || detectLang(text);
+  var uOther = uLang === "zh" ? "vi" : "zh";
+  /* 先把用户这句话的翻译填上（和原来一样显示原文 + 翻译） */
+  translateText(text, uLang, uOther).then(function(trans){
+    if (userEls){
+      userEls.entry.trans = trans; userEls.entry.pending = false;
+      userEls.els.transBlock.style.display = "";
+      userEls.els.transEl.classList.remove("pending-txt");
+      userEls.els.transEl.textContent = trans;
+      saveBotUserEntry(userEls.entry);
+    }
+  }).catch(function(){
+    if (userEls){
+      userEls.entry.pending = false; userEls.entry.transFail = true;
+      userEls.els.transBlock.style.display = "";
+      userEls.els.transEl.classList.remove("pending-txt");
+      userEls.els.transEl.textContent = t.chatTransFail;
+      saveBotUserEntry(userEls.entry);
+    }
+  });
+  /* 再调聊天模型回答；回答也翻译成另一种语言，方便对照着学。
+     回答可能是中文也可能是越南语（用户要求换语言时），翻译方向和朗读声音都按实际语言来 */
+  botChat().then(function(reply){
+    var rLang = detectLang(reply);
+    var rOther = rLang === "zh" ? "vi" : "zh";
+    translateText(reply, rLang, rOther).then(function(rt){
+      botSay(reply, rt, rLang);
+    }).catch(function(){
+      botSay(reply, "", rLang);
+    });
+  }).catch(function(){
+    /* 聊天失败就退回老办法：直接翻译用户的话当回答 */
+    translateText(text, uLang, uOther).then(function(trans){
+      botSay(trans, text, uOther);
+    }).catch(function(){
+      var fail = {
+        dir: "in", orig: t.botTransFail, trans: "", from: myLang,
+        ts: Date.now(), id: ++msgSeq, sess: mySess
+      };
+      appendChatMsgEl(fail);
+      appendChatHistory(histKey(BOT_USER), fail);
+    });
+  });
+}
+function sendBotText(text){
+  var u = botUserEntry(text);
+  botAnswer(text, u);
+}
+/* 机器人语音：点麦克风录音 → Worker Whisper 识别 → 翻译 → 回答并朗读 */
+var botMediaRec = null, botMediaStream = null, botMediaChunks = [], botRecTimer = null, botRecSilent = false;
+function botRecActive(){ return !!botMediaRec; }
+function stopBotRec(silent){
+  botRecSilent = !!silent;
+  if (botRecTimer){ clearTimeout(botRecTimer); botRecTimer = null; }
+  var rec = botMediaRec; botMediaRec = null;
+  if (rec && rec.state !== "inactive"){ try { rec.stop(); } catch(e){} }
+  $("chatMicBtn").classList.remove("rec");
+}
+function botBlobToB64(blob){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(){
+      var res = String(r.result || "");
+      var i = res.indexOf(",");
+      resolve(i >= 0 ? res.slice(i + 1) : res);
+    };
+    r.onerror = function(){ reject(new Error("read blob")); };
+    r.readAsDataURL(blob);
+  });
+}
+function toggleBotRec(){
+  if (botRecActive()){ stopBotRec(false); return; }
+  var t = I18N[myLang] || I18N.zh;
+  if (!OFFLINE_API){ toast(t.botTransFail); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+    toast(t.botNoMic); return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+    var rec;
+    try { rec = new MediaRecorder(stream); } catch(e){
+      try { stream.getTracks().forEach(function(x){ x.stop(); }); } catch(e2){}
+      toast(t.botNoMic); return;
+    }
+    botMediaStream = stream; botMediaChunks = []; botMediaRec = rec; botRecSilent = false;
+    rec.ondataavailable = function(ev){ if (ev.data && ev.data.size) botMediaChunks.push(ev.data); };
+    rec.onstop = function(){
+      var chunks = botMediaChunks.slice(); botMediaChunks = [];
+      var s = botMediaStream; botMediaStream = null; botMediaRec = null;
+      var silent = botRecSilent; botRecSilent = false;
+      if (s){ try { s.getTracks().forEach(function(x){ x.stop(); }); } catch(e){} }
+      if (botRecTimer){ clearTimeout(botRecTimer); botRecTimer = null; }
+      $("chatMicBtn").classList.remove("rec");
+      if (silent || !chunks.length) return;
+      var blob = new Blob(chunks, { type: rec.mimeType || "audio/mp4" });
+      botTranscribe(blob);
+    };
+    try { rec.start(); } catch(e){
+      try { stream.getTracks().forEach(function(x){ x.stop(); }); } catch(e2){}
+      botMediaRec = null; botMediaStream = null; botMediaChunks = [];
+      $("chatMicBtn").classList.remove("rec");
+      toast(t.botNoMic); return;
+    }
+    $("chatMicBtn").classList.add("rec");
+    botRecTimer = setTimeout(function(){ stopBotRec(false); }, 30000);
+  }).catch(function(){
+    toast(t.botNoMic);
+  });
+}
+function botTranscribe(blob){
+  var t = I18N[myLang] || I18N.zh;
+  botBlobToB64(blob).then(function(b64){
+    return fetchJsonPost(OFFLINE_API + "/transcribe", { audio: b64, lang: myLang }, 30000);
+  }).then(function(j){
+    var text = j && j.text ? String(j.text).trim() : "";
+    if (!text){ toast(t.botHeardNothing); return; }
+    var u = botUserEntry(text);
+    botAnswer(text, u);
+  }).catch(function(){
+    toast(t.botHeardNothing);
+  });
 }
 
 function buildFriendRow(f, last, contactStyle){
@@ -3668,10 +4466,20 @@ function buildFriendRow(f, last, contactStyle){
   var nm = document.createElement("div");
   nm.className = "friend-name"; nm.textContent = f.name;
   var fn = document.createElement("span");
-  fn.className = "friend-num"; fn.textContent = f.user;
+  fn.className = "friend-num"; fn.textContent = f.bot ? "AI" : f.user;
   nm.appendChild(fn);
   main.appendChild(nm);
-  main.appendChild(makeStatusEl(f.user));
+  if (f.bot){
+    var bs = document.createElement("div");
+    bs.className = "friend-status";
+    var bd = document.createElement("span");
+    bd.className = "sdot on";
+    bs.appendChild(bd);
+    bs.appendChild(document.createTextNode((I18N[myLang] || I18N.zh).botTag));
+    main.appendChild(bs);
+  } else {
+    main.appendChild(makeStatusEl(f.user));
+  }
   var sub = document.createElement("div");
   sub.className = "friend-sub";
   sub.textContent = last ? ((last.dir === "me" ? I18N[myLang].rowMePrefix : "") + (last.orig || "")) : I18N[myLang].rowTapChat;
@@ -3689,7 +4497,7 @@ function buildFriendRow(f, last, contactStyle){
     tm.className = "friend-time"; tm.textContent = fmtListTime(last.ts);
     row.appendChild(tm);
   }
-  row.appendChild(makeDeleteBtn(f));
+  if (!f.bot) row.appendChild(makeDeleteBtn(f));
   function open(){ openChat(f); }
   row.addEventListener("click", open);
   row.addEventListener("keydown", function(ev){
@@ -3713,6 +4521,7 @@ function renderFriends(){
   friends.forEach(function(f){ if ((chatUnread[f.user] || 0) > 0) unreadTotal++; });
   var mc = $("msgCount"); if (mc) mc.textContent = String(friends.length);
   var fc = $("friendsCount"); if (fc) fc.textContent = String(friends.length);
+  var pc = $("profileFriendCount"); if (pc) pc.textContent = fillTpl((I18N[myLang] || I18N.zh).friendCountTpl, { n: friends.length });
   var ca = $("filterAllCount"); if (ca) ca.textContent = String(friends.length);
   var cf = $("filterFriendsCount"); if (cf) cf.textContent = String(friends.length);
   var cu = $("filterUnreadCount");
@@ -3739,6 +4548,8 @@ function renderFriends(){
         return String(a.f.name).localeCompare(String(b.f.name));
       });
     }
+    var botIt = { f: botFriend(), last: botLastEntry() };
+    if (homeFilter !== "unread" && friendMatchesSearch(botIt.f, homeSearch)) items.unshift(botIt);
     var emptyEl = $("friendEmpty");
     if (emptyEl){
       if (!items.length){
@@ -3763,6 +4574,7 @@ function renderFriends(){
       var hist = loadChatHistory(histKey(f.user));
       clist.appendChild(buildFriendRow(f, hist.length ? hist[hist.length - 1] : null, true));
     });
+    clist.insertBefore(buildFriendRow(botFriend(), botLastEntry(), true), clist.firstChild);
   }
   renderDiag();
 }
@@ -3985,14 +4797,35 @@ function showCallInviteOverlay(){
   $("incomingText").textContent = fillTpl(pendingInvite.mode === "voice" ? it.inviteVoiceTpl : it.inviteVideoTpl, { name: disp });
   $("incomingSub").textContent = pendingInvite.mode === "voice" ? it.inviteSubVoice : it.inviteSubVideo;
   $("incomingOverlay").classList.remove("hidden");
+  ringStart("in");
+  /* 没点过页面时 iOS 不让出声：显示“轻点屏幕开启铃声”，点一下就响 */
+  var sndHint = $("incomingSoundHint");
+  if (sndHint){
+    if (ringCtx && ringCtx.state === "suspended") sndHint.classList.remove("hidden");
+    else sndHint.classList.add("hidden");
+  }
 }
 function hideCallInviteOverlay(){
+  ringStop();
+  var sndHint = $("incomingSoundHint");
+  if (sndHint) sndHint.classList.add("hidden");
   $("incomingOverlay").classList.add("hidden");
   if (modalShowing === "call"){
     modalShowing = null;
     pumpModalQueue();
   }
 }
+/* 来电界面点空白处（不是接听/拒绝按钮）：解锁音频并重响铃声。
+   接听方没点过页面时 iOS 不让出声，点一下屏幕就能响。 */
+$("incomingOverlay").addEventListener("click", function(e){
+  if (e.target.closest("button")) return;
+  ringUnlock();
+  if (pendingInvite && !$("incomingOverlay").classList.contains("hidden")){
+    ringStart("in");
+    var sndHint = $("incomingSoundHint");
+    if (sndHint) sndHint.classList.add("hidden");
+  }
+});
 function showFriendReqOverlay(req){
   var disp = req.name || req.num;
   setAvatar($("friendReqAvatar"), req.num);
@@ -4224,6 +5057,52 @@ function offlineSend(to, entry){
     }).catch(function(){});
   });
 }
+/* VAPID 公钥（由 vapid-private-key.txt 的 JWK 推出来，只放公钥在网页里，私钥只在 Worker 那边）。 */
+var VAPID_PUBLIC_KEY = "BLlusumjBLlLecF_BBebPHeOUOD1oI1g2SlzzTvk9ibz2ybMoXNlhD9c5DU13IcO0HV96Em2F68GduKOol1plh8";
+function urlBase64ToUint8Array(base64String){
+  var padding = "=".repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  var raw = window.atob(base64);
+  var out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+/* 登录后订阅网页推送：只在支持 PushManager 的主屏幕 PWA 里生效；原生 IPA 里没有
+   PushManager 会直接跳过。通知权限被拒或订阅失败都静默跳过，不影响聊天和通话。 */
+function pushSubscribe(){
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    if (Notification.permission === "denied") return;
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(sub){
+        if (sub) return sub;
+        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+      });
+    }).then(function(sub){
+      if (!sub) return;
+      return offlineToken().then(function(token){
+        if (!token) return;
+        return fetch(OFFLINE_API + "/push-subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          body: JSON.stringify({ subscription: sub.toJSON() }),
+        });
+      });
+    }).catch(function(){});
+  } catch(e){}
+}
+/* 拨号时给对方发一条来电推送（对方手机关着 app 也能收到）。失败静默，不影响通话本身。 */
+function offlineCallPush(to, mode){
+  if (!OFFLINE_API || !isNum(to)) return;
+  offlineToken().then(function(token){
+    if (!token) return;
+    fetch(OFFLINE_API + "/call-push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ to: to, mode: mode === "video" ? "video" : "voice", name: myDisplayName() }),
+    }).catch(function(){});
+  });
+}
 var offlineFetching = false;
 function offlineFetch(){
   if (!OFFLINE_API || offlineFetching || !entered || !myEmail) return;
@@ -4251,45 +5130,6 @@ function offlineFetch(){
       .catch(function(){})
       .then(function(){ offlineFetching = false; });
   }).catch(function(){ offlineFetching = false; });
-}
-
-/* ================= 网页推送（Web Push） =================
-   登录后订阅推送：浏览器把订阅发给 Worker 存进 D1；对方发消息存进 D1 时，
-   Worker 就按订阅给对方手机发一条推送。只在加到主屏幕的网页版里生效；
-   原生 IPA 里没有 PushManager，会直接跳过。 */
-var VAPID_PUBLIC_KEY = "BLlusumjBLlLecF_BBebPHeOUOD1oI1g2SlzzTvk9ibz2ybMoXNlhD9c5DU13IcO0HV96Em2F68GduKOol1plh8";
-function pushSubscribe(){
-  try {
-    if (!OFFLINE_API || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
-    if (Notification.permission === "denied") return;
-    var b64ToBytes = function(s){
-      var t = String(s).replace(/-/g, "+").replace(/_/g, "/");
-      while (t.length % 4) t += "=";
-      var bin = atob(t), out = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-      return out;
-    };
-    var doSub = function(){
-      navigator.serviceWorker.ready.then(function(reg){
-        return reg.pushManager.getSubscription().then(function(sub){
-          if (sub) return sub;
-          return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC_KEY) });
-        });
-      }).then(function(sub){
-        if (!sub) return;
-        return offlineToken().then(function(token){
-          if (!token) return;
-          return fetch(OFFLINE_API + "/push-subscribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-            body: JSON.stringify({ subscription: sub.toJSON() }),
-          }).catch(function(){});
-        });
-      }).catch(function(){});
-    };
-    if (Notification.permission === "granted") doSub();
-    else Notification.requestPermission().then(function(p){ if (p === "granted") doSub(); }).catch(function(){});
-  } catch(e){}
 }
 
 /* ================= 聊天（记录按账号分开存） ================= */
@@ -4365,6 +5205,199 @@ function metaTextFor(entry){
 }
 var TRANS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M8.5 3v2c0 3.5-2 6.5-4.5 8.5M6 8.5c1 2.5 3.5 5 6.5 6.5"/><path d="M12.5 21l4.5-10 4.5 10M14.2 17.5h5.6"/></svg>';
 var SPEAK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+/* ================= ＋ 菜单：发图片 / 视频 / 文件（第 24 轮） ================= */
+/* 走已有的好友数据通道：先发一条 meta（种类、名字、大小、分片数），再按 16KB base64 分片发；
+   对方收齐后拼回文件。图片先缩到最长边 1024 再发；视频/文件原样发，上限 10MB。
+   文件内容存在 IndexedDB（历史里只留 mediaKey），重开 App 后图片/视频/文件都还在；
+   只有对方在线时才能发（离线存不了媒体，D1 那边只存文字）。 */
+var mediaIncoming = {};
+function fmtMediaSize(n){
+  n = Number(n) || 0;
+  if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+  if (n >= 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+var mediaDbPromise = null;
+function mediaDb(){
+  if (mediaDbPromise) return mediaDbPromise;
+  mediaDbPromise = new Promise(function(resolve){
+    try {
+      var req = indexedDB.open("zhong-yue-media", 1);
+      req.onupgradeneeded = function(){ try { req.result.createObjectStore("blobs"); } catch(e){} };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ resolve(null); };
+    } catch(e){ resolve(null); }
+  });
+  return mediaDbPromise;
+}
+function saveMediaBlob(key, blob){
+  return mediaDb().then(function(db){
+    if (!db) return false;
+    return new Promise(function(resolve){
+      try {
+        var tx = db.transaction("blobs", "readwrite");
+        tx.objectStore("blobs").put(blob, key);
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(){ resolve(false); };
+      } catch(e){ resolve(false); }
+    });
+  });
+}
+function loadMediaBlob(key){
+  return mediaDb().then(function(db){
+    if (!db) return null;
+    return new Promise(function(resolve){
+      try {
+        var req = db.transaction("blobs", "readonly").objectStore("blobs").get(key);
+        req.onsuccess = function(){ var b = req.result; resolve(b ? URL.createObjectURL(b) : null); };
+        req.onerror = function(){ resolve(null); };
+      } catch(e){ resolve(null); }
+    });
+  });
+}
+function b64ToBlob(b64, mime){
+  var bin = atob(b64);
+  var u8 = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Blob([u8], { type: mime || "application/octet-stream" });
+}
+function downscaleImage(file){
+  return new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      try {
+        var max = 1024;
+        var s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        var cv = document.createElement("canvas");
+        cv.width = Math.max(1, Math.round(img.naturalWidth * s));
+        cv.height = Math.max(1, Math.round(img.naturalHeight * s));
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function(b){ b ? resolve(b) : reject(new Error("encode")); }, "image/jpeg", 0.82);
+      } catch(e){ URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("load")); };
+    img.src = url;
+  });
+}
+function patchHistoryEntry(user, sess, id, patch){
+  var code = histKey(user);
+  var arr = loadChatHistory(code);
+  for (var i = 0; i < arr.length; i++){
+    if (arr[i].sess === sess && arr[i].id === id){
+      for (var k in patch) arr[i][k] = patch[k];
+      saveChatHistory(code, arr);
+      return;
+    }
+  }
+}
+function mediaLabel(kind, name){
+  return kind === "image" ? "📷 图片" : kind === "video" ? "📹 视频" : "📎 " + (name || "文件");
+}
+function sendMedia(file, kind){
+  var f = chatFriend;
+  if (!f || f.bot) return;
+  if (file.size > 10 * 1024 * 1024){ toast(I18N[myLang].mediaTooBig); return; }
+  connectChat(f).then(function(c){
+    if (!c || !c.open){ toast(I18N[myLang].mediaOffline); return; }
+    var prep = kind === "image" ? downscaleImage(file).catch(function(){ return file; }) : Promise.resolve(file);
+    prep.then(function(blob){
+      var mime = blob.type || file.type || (kind === "image" ? "image/jpeg" : "application/octet-stream");
+      var name = file.name || (kind === "image" ? "图片" : kind === "video" ? "视频" : "文件");
+      var id = ++msgSeq, sess = mySess, ts = Date.now();
+      var key = sess + ":" + id;
+      var label = mediaLabel(kind, name);
+      var entry = { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: myLang, ts: ts, id: id, sess: sess, mediaKey: key, media: URL.createObjectURL(blob) };
+      var els = appendChatMsgEl(entry);
+      saveMediaBlob(key, blob).catch(function(){});
+      appendChatHistory(histKey(f.user), { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: myLang, ts: ts, id: id, sess: sess, mediaKey: key });
+      var reader = new FileReader();
+      reader.onload = function(){
+        var b64 = String(reader.result || "").split(",")[1] || "";
+        var CH = 16384;
+        var total = Math.max(1, Math.ceil(b64.length / CH));
+        var idx = 0, failed = false;
+        function failMedia(){
+          if (failed) return;
+          failed = true;
+          entry.failed = true;
+          patchHistoryEntry(f.user, sess, id, { failed: true });
+          els.metaEl.className = "msg-meta fail";
+          els.metaEl.textContent = metaTextFor(entry);
+          toast(I18N[myLang].mediaOffline);
+        }
+        var okMeta = false;
+        try { okMeta = c.send({ type: "chat-media-meta", sess: sess, id: id, kind: kind, name: name, size: blob.size, mime: mime, chunks: total, ts: ts, from: myLang, sender: myDisplayName() }) !== false; } catch(e){}
+        if (!okMeta){ failMedia(); return; }
+        (function sendNext(){
+          if (failed) return;
+          if (idx >= total) return;
+          var ok = false;
+          try { ok = c.send({ type: "chat-media-chunk", sess: sess, id: id, idx: idx, data: b64.slice(idx * CH, (idx + 1) * CH) }) !== false; } catch(e){}
+          if (!ok){ failMedia(); return; }
+          idx++;
+          if (idx % 20 === 0) setTimeout(sendNext, 0); else sendNext();
+        })();
+      };
+      reader.onerror = function(){ entry.failed = true; patchHistoryEntry(f.user, sess, id, { failed: true }); };
+      reader.readAsDataURL(blob);
+    });
+  });
+}
+function receiveMediaMeta(user, data){
+  var f = friendByUser(user);
+  if (!f){
+    f = { name: String(data.sender || user), user: user };
+    friends.push(f);
+    persistFriends();
+  }
+  learnFriendName(user, data.sender);
+  var key = (data.sess || "") + ":" + data.id;
+  var now = Date.now();
+  for (var k in mediaIncoming){
+    if (mediaIncoming[k].done || now - mediaIncoming[k].at > 300000) delete mediaIncoming[k];
+  }
+  if (mediaIncoming[key] && mediaIncoming[key].done) return;
+  mediaIncoming[key] = { meta: data, parts: new Array(Math.max(1, data.chunks || 1)), got: 0, at: now };
+}
+function receiveMediaChunk(user, data){
+  var key = (data.sess || "") + ":" + data.id;
+  var buf = mediaIncoming[key];
+  if (!buf || buf.done) return;
+  if (data.idx < 0 || data.idx >= buf.parts.length) return;
+  if (buf.parts[data.idx] === undefined){ buf.parts[data.idx] = data.data || ""; buf.got++; }
+  if (buf.got < buf.parts.length) return;
+  buf.done = true;
+  var m = buf.meta;
+  var blob = b64ToBlob(buf.parts.join(""), m.mime || "application/octet-stream");
+  var label = mediaLabel(m.kind, m.name);
+  var entry = { dir: "peer", kind: m.kind, name: m.name || "", size: m.size || 0, mime: m.mime || "", orig: label, trans: "", from: m.from === "vi" ? "vi" : "zh", ts: m.ts || Date.now(), id: m.id, sess: m.sess || "", mediaKey: key };
+  saveMediaBlob(key, blob).catch(function(){});
+  var hist = loadChatHistory(histKey(user));
+  for (var i = 0; i < hist.length; i++){
+    if (hist[i].id === entry.id && hist[i].sess === entry.sess && entry.id !== undefined){ delete mediaIncoming[key]; return; }
+  }
+  appendChatHistory(histKey(user), { dir: "peer", kind: entry.kind, name: entry.name, size: entry.size, mime: entry.mime, orig: label, trans: "", from: entry.from, ts: entry.ts, id: entry.id, sess: entry.sess, mediaKey: key });
+  var ff = friendByUser(user);
+  if (chatFriend && chatFriend.user === user){
+    entry.media = URL.createObjectURL(blob);
+    appendChatMsgEl(entry);
+    setChatState("on");
+    sendReadReceipt(user);
+  } else {
+    chatUnread[user] = (chatUnread[user] || 0) + 1;
+    renderFriends();
+    toast(fillTpl(I18N[myLang].newMsgTpl, { name: ff ? ff.name : user, text: label }));
+  }
+  delete mediaIncoming[key];
+}
+$("plusImageBtn").addEventListener("click", function(){ hidePlusMenu(); $("mediaPhotoInput").click(); });
+$("plusVideoSendBtn").addEventListener("click", function(){ hidePlusMenu(); $("mediaVideoInput").click(); });
+$("plusFileBtn").addEventListener("click", function(){ hidePlusMenu(); $("mediaFileInput").click(); });
+$("mediaPhotoInput").addEventListener("change", function(){ var f = this.files && this.files[0]; this.value = ""; if (f) sendMedia(f, "image"); });
+$("mediaVideoInput").addEventListener("change", function(){ var f = this.files && this.files[0]; this.value = ""; if (f) sendMedia(f, "video"); });
+$("mediaFileInput").addEventListener("change", function(){ var f = this.files && this.files[0]; this.value = ""; if (f) sendMedia(f, "file"); });
 function appendChatMsgEl(entry){
   var box = $("chatMessages");
   var empty = box.querySelector(".chat-empty");
@@ -4386,6 +5419,37 @@ function appendChatMsgEl(entry){
   var o = document.createElement("div");
   o.className = "orig"; o.textContent = entry.orig || "";
   bub.appendChild(o);
+  if (entry.kind){
+    o.style.display = "none";
+    var mm = document.createElement("div");
+    mm.className = "msg-media";
+    if (entry.kind === "image"){
+      var im = document.createElement("img");
+      im.alt = entry.name || "";
+      if (entry.media) im.src = entry.media;
+      else if (entry.mediaKey) loadMediaBlob(entry.mediaKey).then(function(u){ if (u) im.src = u; });
+      mm.appendChild(im);
+    } else if (entry.kind === "video"){
+      var vd = document.createElement("video");
+      vd.controls = true; vd.preload = "metadata"; vd.playsInline = true;
+      if (entry.media) vd.src = entry.media;
+      else if (entry.mediaKey) loadMediaBlob(entry.mediaKey).then(function(u){ if (u) vd.src = u; });
+      mm.appendChild(vd);
+      var cap = document.createElement("div");
+      cap.className = "msg-file-name";
+      cap.textContent = (entry.name || "") + (entry.size ? " · " + fmtMediaSize(entry.size) : "");
+      mm.appendChild(cap);
+    } else {
+      var fa = document.createElement("a");
+      fa.className = "msg-file";
+      fa.textContent = "📎 " + (entry.name || "") + (entry.size ? " · " + fmtMediaSize(entry.size) : "");
+      if (entry.name) fa.setAttribute("download", entry.name);
+      if (entry.media) fa.href = entry.media;
+      else if (entry.mediaKey) loadMediaBlob(entry.mediaKey).then(function(u){ if (u) fa.href = u; });
+      mm.appendChild(fa);
+    }
+    bub.insertBefore(mm, o);
+  }
   var tb = document.createElement("div");
   tb.className = "trans-block";
   var showTrans = translateOn && (entry.trans || entry.pending || entry.transFail);
@@ -4409,10 +5473,12 @@ function appendChatMsgEl(entry){
   sp.setAttribute("aria-label", I18N[myLang].ariaSpeak);
   sp.innerHTML = SPEAK_ICON;
   sp.addEventListener("click", function(){
+    if (entry.speak){ speakAlways(entry.speak, entry.speakLang || "zh"); return; }
     var toLang = entry.from === "zh" ? "vi" : "zh";
     if (entry.trans) speakAlways(entry.trans, toLang);
     else speakAlways(entry.orig || "", entry.from || "zh");
   });
+  if (entry.kind) sp.style.display = "none";
   meta.appendChild(sp);
   wrap.appendChild(head); wrap.appendChild(bub); wrap.appendChild(meta);
   box.appendChild(wrap);
@@ -4482,6 +5548,8 @@ function wireChatDc(user, dc){
     if (!data || typeof data !== "object") return;
     if (data.type === "chat-msg") receiveChatMsg(user, data);
     else if (data.type === "chat-read") markReadByFriend(user);
+    else if (data.type === "chat-media-meta") receiveMediaMeta(user, data);
+    else if (data.type === "chat-media-chunk") receiveMediaChunk(user, data);
     else if (data.type === "hello") learnFriendName(user, data.name);
   };
   dc.onclose = function(){
@@ -4652,19 +5720,42 @@ function openChat(f){
   $("chatFriendName").textContent = f.name;
   setAvatar($("chatAvatar"), f.user);
   $("infoName").textContent = f.name;
-  $("infoEmail").textContent = fillTpl(I18N[myLang].infoNumTpl, { num: f.user });
-  setChatState(chatConns[f.user] && chatConns[f.user].open ? "on" : "wait");
-  renderChatHistory();
-  connectChat(f).then(function(c){
-    if (c && c.open){ sendReadReceipt(f.user); flushOutbox(f.user); }
-    else if (chatFriend && chatFriend.user === f.user) setChatState("fail");
-  });
+  $("infoEmail").textContent = f.bot ? (I18N[myLang] || I18N.zh).botTag : fillTpl(I18N[myLang].infoNumTpl, { num: f.user });
+  var isBot = !!f.bot;
+  $("chatCallVoiceBtn").style.display = isBot ? "none" : "";
+  $("chatCallVideoBtn").style.display = isBot ? "none" : "";
+  $("chatPlusBtn").style.display = "";
+  $("plusVideoBtn").style.display = isBot ? "none" : "";
+  $("plusVoiceBtn").style.display = isBot ? "none" : "";
+  $("plusImageBtn").style.display = isBot ? "none" : "";
+  $("plusVideoSendBtn").style.display = isBot ? "none" : "";
+  $("plusFileBtn").style.display = isBot ? "none" : "";
+  $("chatMicBtn").style.display = isBot ? "" : (SR ? "" : "none");
+  renderBotSpeakBtn();
+  hideEmojiPanel();
+  updateSendMode();
+  if (isBot){
+    setChatState("on");
+    var freshBot = seedBotIntro();
+    if (!freshBot) seedBotUpgraded();
+    renderChatHistory();
+  } else {
+    setChatState(chatConns[f.user] && chatConns[f.user].open ? "on" : "wait");
+    renderChatHistory();
+    connectChat(f).then(function(c){
+      if (c && c.open){ sendReadReceipt(f.user); flushOutbox(f.user); }
+      else if (chatFriend && chatFriend.user === f.user) setChatState("fail");
+    });
+  }
   setTimeout(function(){ try { $("chatInput").focus(); } catch(e){} }, 80);
 }
 $("chatBackBtn").addEventListener("click", function(){
   chatFriend = null;
   hidePlusMenu();
   stopDictation();
+  stopBotRec(true);
+  stopSpeakCloud();
+  try { window.speechSynthesis.cancel(); } catch(e){}
   $("infoPanel").classList.add("hidden");
   $("chatScreen").classList.add("hidden");
   $("homeScreen").classList.remove("hidden");
@@ -4690,12 +5781,55 @@ function hidePlusMenu(){
   $("chatPlusMenu").classList.add("hidden");
   $("chatPlusBtn").classList.remove("open");
 }
+/* 表情面板：点表情插进输入框光标处 */
+var EMOJIS = ["😊","😂","❤️","👍","🙏","😍","🤔","😮","😢","😡","🎉","🔥","👏","🙌","💪","😘","🥰","😎","🤗","😴","🤝","🌹","☕","🍜"];
+function hideEmojiPanel(){
+  var p = $("emojiPanel");
+  if (p) p.classList.add("hidden");
+}
+(function buildEmojiPanel(){
+  var p = $("emojiPanel");
+  if (!p) return;
+  EMOJIS.forEach(function(e){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = e;
+    b.addEventListener("click", function(){
+      var input = $("chatInput");
+      var start = input.selectionStart || 0, end = input.selectionEnd || 0;
+      var v = input.value;
+      input.value = v.slice(0, start) + e + v.slice(end);
+      input.focus();
+      var pos = start + e.length;
+      try { input.setSelectionRange(pos, pos); } catch(err){}
+      input.dispatchEvent(new Event("input"));
+    });
+    p.appendChild(b);
+  });
+})();
+$("chatEmojiBtn").addEventListener("click", function(ev){
+  ev.stopPropagation();
+  hidePlusMenu();
+  $("emojiPanel").classList.toggle("hidden");
+});
+$("plusLangBtn").addEventListener("click", function(){
+  hidePlusMenu();
+  $("chatLangBtn").click();
+});
+/* 微信式输入栏：有字时 + 变绿色发送，没字时点开 + 菜单 */
+function updateSendMode(){
+  var b = $("chatPlusBtn");
+  if (!b) return;
+  b.classList.toggle("send-mode", !!$("chatInput").value.replace(/^\s+|\s+$/g, ""));
+}
 $("chatPlusBtn").addEventListener("click", function(ev){
   ev.stopPropagation();
+  if ($("chatPlusBtn").classList.contains("send-mode")){ sendChat(); return; }
+  hideEmojiPanel();
   var nowHidden = $("chatPlusMenu").classList.toggle("hidden");
   $("chatPlusBtn").classList.toggle("open", !nowHidden);
 });
-$("chatMessages").addEventListener("click", function(){ hidePlusMenu(); });
+$("chatMessages").addEventListener("click", function(){ hidePlusMenu(); hideEmojiPanel(); });
 $("plusVideoBtn").addEventListener("click", function(){
   if (chatFriend) startUserCall(chatFriend, "video");
 });
@@ -4731,6 +5865,13 @@ function sendChat(){
   $("chatSendBtn").disabled = true;
   input.value = "";
   input.style.height = "auto";
+  updateSendMode();
+  if (f.bot){
+    chatSending = false;
+    $("chatSendBtn").disabled = false;
+    sendBotText(text);
+    return;
+  }
   var from = myLang, to = from === "zh" ? "vi" : "zh";
   var entry = {
     dir: "me", orig: text, trans: "", from: from,
@@ -4791,6 +5932,7 @@ $("chatInput").addEventListener("input", function(){
   var el = $("chatInput");
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 110) + "px";
+  updateSendMode();
 });
 
 /* ================= 聊天语音输入（点麦克风说话，文字填进输入框） ================= */
@@ -4842,21 +5984,27 @@ function toggleDictation(){
     toast(I18N[myLang].toastSRFail);
   }
 }
-$("chatMicBtn").addEventListener("click", toggleDictation);
+$("chatMicBtn").addEventListener("click", function(){
+  if (chatFriend && chatFriend.bot) toggleBotRec();
+  else toggleDictation();
+});
 if (!SR) $("chatMicBtn").style.display = "none";
 
 /* ================= 挂断 ================= */
 function hangupCore(){
+  ringStop();
   if (sessionKind === "user" && userCallTarget) commitCallLog(); else callLogCur = null;
   setListen(false);
   $("inviteBar").classList.add("hidden");
+  stopSpeakCloud();
   if ("speechSynthesis" in window){ try { window.speechSynthesis.cancel(); } catch(e){} }
   clearInterval(retryTimer); clearTimeout(restartTimer);
   clearTimeout(userCallTimer); userCallTimer = null;
   clearTimeout(offerCheckTimer); offerCheckTimer = null;
-  /* 拨出还没接就挂断：告诉对方取消；已接通的：告诉对方我挂了（对方收到 call-end 后同样挂断，不会死循环） */
-  if (sessionKind === "user" && userCallTarget && callOffered && !hangupFromRemote){
-    if (userCallAnswered) sendSignalTo(userCallTarget, { type: "call-end", from: myNum });
+  /* 挂断要告诉对方：拨出还没接就发 call-cancel；已接通（不管我是拨出还是接听）就发 call-end。
+     之前只在 callOffered 时才发，接听方 callOffered 一直是 false，所以接听方挂断什么都不发，对方就一直停在通话里。 */
+  if (sessionKind === "user" && userCallTarget && !hangupFromRemote){
+    if (userCallAnswered || !callOffered) sendSignalTo(userCallTarget, { type: "call-end", from: myNum });
     else sendSignalTo(userCallTarget, { type: "call-cancel", from: myNum });
   }
   if (sessionKind === "room") sendRoomSignal({ type: "room-leave", from: myNum });
@@ -4918,23 +6066,95 @@ window.addEventListener("beforeunload", cleanupOnExit);
 window.addEventListener("pagehide", cleanupOnExit);
 
 /* ================= 昵称编辑 ================= */
-$("editNickBtn").addEventListener("click", function(){
-  $("nickInput").value = myName;
-  $("nickErr").textContent = "";
-  $("nickPanel").classList.remove("hidden");
-  setTimeout(function(){ try { $("nickInput").focus(); } catch(e){} }, 60);
+/* ================= 资料编辑面板（第 33 轮：换头像 / 改男女 / 昵称 / 邮箱 / 密码 / 好友号） ================= */
+var MALE_AVATARS = ["avatar-ha.jpg", "avatar-m1.jpg", "avatar-m2.jpg"];
+var FEMALE_AVATARS = ["avatar-f1.jpg", "avatar-f2.jpg"];
+var peGender = "male";
+var peAvatar = "";
+function peAvatarOptions(){
+  return peGender === "female" ? FEMALE_AVATARS : MALE_AVATARS;
+}
+function renderPeAvatars(){
+  var row = $("peAvatarRow"); if (!row) return;
+  var opts = peAvatarOptions();
+  if (opts.indexOf(peAvatar) < 0) peAvatar = opts[0];
+  row.innerHTML = "";
+  opts.forEach(function(src){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pe-avatar" + (src === peAvatar ? " sel" : "");
+    b.innerHTML = '<img src="' + src + '" alt="">';
+    b.addEventListener("click", function(){ peAvatar = src; renderPeAvatars(); });
+    row.appendChild(b);
+  });
+}
+function renderPeGender(){
+  var m = $("peGenderMale"), f = $("peGenderFemale");
+  if (m) m.classList.toggle("sel", peGender === "male");
+  if (f) f.classList.toggle("sel", peGender === "female");
+}
+function openProfileEdit(){
+  peGender = myGender || "male";
+  peAvatar = myAvatarImg || "avatar-ha.jpg";
+  renderPeGender();
+  renderPeAvatars();
+  $("peNickInput").value = myName;
+  $("peEmailInput").value = myEmail;
+  $("pePassInput").value = "";
+  $("pePass2Input").value = "";
+  $("peNumInput").value = myNum;
+  $("peErr").textContent = "";
+  $("profileEditPanel").classList.remove("hidden");
+  setTimeout(function(){ try { $("peNickInput").focus(); } catch(e){} }, 60);
+}
+$("peGenderMale").addEventListener("click", function(){ peGender = "male"; renderPeGender(); renderPeAvatars(); });
+$("peGenderFemale").addEventListener("click", function(){ peGender = "female"; renderPeGender(); renderPeAvatars(); });
+$("peCancelBtn").addEventListener("click", function(){
+  $("profileEditPanel").classList.add("hidden");
 });
-$("nickCancelBtn").addEventListener("click", function(){
-  $("nickPanel").classList.add("hidden");
-});
-$("nickSaveBtn").addEventListener("click", function(){
-  var v = $("nickInput").value.replace(/^\s+|\s+$/g, "");
-  myName = v;
-  saveMyName();
+$("peSaveBtn").addEventListener("click", function(){
+  var t = I18N[myLang] || I18N.zh;
+  var err = $("peErr");
+  var nick = $("peNickInput").value.replace(/^\s+|\s+$/g, "");
+  var email = $("peEmailInput").value.replace(/^\s+|\s+$/g, "").toLowerCase();
+  var pass = $("pePassInput").value;
+  var pass2 = $("pePass2Input").value;
+  var num = $("peNumInput").value.replace(/\s+/g, "");
+  err.textContent = "";
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = t.emailInvalid; return; }
+  if (pass || pass2){
+    if (pass.length < 6){ err.textContent = t.passTooShort; return; }
+    if (pass !== pass2){ err.textContent = t.passMismatch; return; }
+  }
+  if (!/^\d{6}$/.test(num)){ err.textContent = t.numInvalid; return; }
+  myName = nick; saveMyName();
+  myGender = peGender; saveMyGender();
+  myAvatarImg = peAvatar; saveMyAvatarImg();
   renderMyProfile();
-  $("nickPanel").classList.add("hidden");
-  toast(v ? fillTpl(I18N[myLang].nickSavedTpl, { name: v }) : I18N[myLang].nickCleared);
+  if (email && email !== myEmail && sb){
+    sb.auth.updateUser({ email: email }).then(function(res){
+      if (res && res.error) throw res.error;
+      toast(t.emailSent);
+    }).catch(function(e){ toast((e && e.message) || t.saveFailed); });
+  }
+  if (pass && sb){
+    sb.auth.updateUser({ password: pass }).then(function(res){
+      if (res && res.error) throw res.error;
+      toast(t.passChanged);
+    }).catch(function(e){ toast((e && e.message) || t.saveFailed); });
+  }
+  $("profileEditPanel").classList.add("hidden");
+  if (num !== myNum && sb){
+    sb.auth.updateUser({ data: { num: num } }).then(function(){
+      toast(t.numChanged);
+      setTimeout(function(){ try { location.reload(); } catch(e){} }, 1200);
+    }).catch(function(e){ toast((e && e.message) || t.saveFailed); });
+    return;
+  }
+  toast(t.profileSaved);
 });
+$("profileAddFriendBtn").addEventListener("click", function(){ openFriendPanel(""); });
+$("profileFriendsBtn").addEventListener("click", function(){ switchHomeTab("friends"); });
 
 /* ================= 登录 / 注册（Supabase） ================= */
 var authMode = "login";
@@ -5005,6 +6225,8 @@ function enterApp(email){
   signalRetryCount = 0;
   entered = true;
   loadMyName();
+  loadMyGender();
+  loadMyAvatarImg();
   try {
     var t = window.localStorage ? window.localStorage.getItem("zhyuetong-translate-on-" + encodeURIComponent(myEmail)) : null;
     translateOn = t !== "0";
@@ -5049,6 +6271,11 @@ function exitApp(){
 }
 function hangupSilent(){
   if (!started) return;
+  /* 关页面/切后台时也尽量告诉对方我挂了，不然对方一直停在通话里（发不出去也没关系，静默失败） */
+  if (sessionKind === "user" && userCallTarget){
+    try { sendSignalTo(userCallTarget, { type: "call-end", from: myNum }); } catch(e){}
+  }
+  ringStop();
   setListen(false);
   clearTimeout(userCallTimer); userCallTimer = null;
   clearTimeout(offerCheckTimer); offerCheckTimer = null;
@@ -5067,7 +6294,51 @@ $("copyNumBtn").addEventListener("click", function(){
   if (!myNum){ toast(I18N[myLang].toastNumGenerating); return; }
   copyText(myNum, fillTpl(I18N[myLang].copyNumOk, { num: myNum }));
 });
-$("logoutBtn").addEventListener("click", function(){
+/* ================= 设置页新增的几行（第 17 轮，越聊模板的样子） ================= */
+/* 昵称那行：打开改昵称面板（跟“改昵称”按钮同一个入口） */
+/* 资料卡第一行（头像 + 昵称 + ›）：点一下打开资料编辑面板 */
+$("profileTop").addEventListener("click", function(){ openProfileEdit(); });
+/* “我的语言”那行：点一下切一次语言（跟输入框旁边的语言按钮同一个入口） */
+$("langRowBtn").addEventListener("click", function(){
+  setMyLang(myLang === "zh" ? "vi" : "zh", false);
+});
+/* “消息通知与来电提醒”那行：查一下通知状态；没开就请求开启 */
+$("notifRowBtn").addEventListener("click", function(){
+  if (!("Notification" in window) || !("PushManager" in window) || !("serviceWorker" in navigator)){
+    toast(myLang === "zh" ? "这台设备不支持网页通知" : "Thiết bị này không hỗ trợ thông báo web");
+    return;
+  }
+  if (Notification.permission === "granted"){
+    pushSubscribe();
+    toast(myLang === "zh" ? "消息通知已开启" : "Đã bật thông báo");
+  } else if (Notification.permission === "denied"){
+    toast(myLang === "zh" ? "通知被关掉了，去手机设置里打开" : "Thông báo đã bị tắt, hãy bật trong Cài đặt");
+  } else {
+    Notification.requestPermission().then(function(p){
+      if (p === "granted"){ pushSubscribe(); toast(myLang === "zh" ? "消息通知已开启" : "Đã bật thông báo"); }
+      else { toast(myLang === "zh" ? "通知还没开启" : "Chưa bật thông báo"); }
+    });
+  }
+});
+/* “体验版说明”那行：展开/收起说明面板 */
+$("helpRowBtn").addEventListener("click", function(){
+  $("trialPanel").classList.toggle("hidden");
+});
+/* 推荐好友：点开面板，显示 App 链接 + 二维码；打开时刷一遍链接和好友号 */
+$("inviteRowBtn").addEventListener("click", function(){
+  var p = $("invitePanel");
+  var nowHidden = p.classList.toggle("hidden");
+  if (!nowHidden){
+    $("inviteUrl").textContent = PUBLISHED_BASE;
+    var iam = $("inviteAddMe");
+    if (iam) iam.textContent = fillTpl((I18N[myLang] || I18N.zh).inviteAddMeTpl, { num: myNum || "······" });
+  }
+});
+$("inviteCopyBtn").addEventListener("click", function(){
+  copyText(PUBLISHED_BASE, (I18N[myLang] || I18N.zh).inviteCopied);
+});
+/* 底部“退出登录”那行：跟原来那个按钮同一个入口 */
+$("logoutRowBtn").addEventListener("click", function(){
   if (sb){
     sb.auth.signOut().then(function(){ exitApp(); }).catch(function(){ exitApp(); });
   } else {
@@ -5098,6 +6369,9 @@ function bootRoomFromUrl(){
   var bootCode = urlRoom ? urlRoom.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) : "";
   if (bootCode.length === 6){
     $("roomPanel").classList.remove("hidden");
+    /* 房间号行默认是藏起来的（第 28 轮改成推荐好友），带房间号的链接点进来时要把它亮出来 */
+    var rf = $("roomFoldBtn").closest(".room-fold");
+    if (rf) rf.classList.remove("hidden");
     $("roomFoldBtn").classList.add("open");
     $("roomActions").classList.add("hidden");
     $("joinPanel").classList.remove("hidden");
