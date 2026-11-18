@@ -1,0 +1,44 @@
+name: Build Swift IPA (unsigned)
+
+# SwiftUI 原生 App（swift-app/）的不签名 IPA 构建。只手动触发，不随 push 自动跑。
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project swift-app/ZhongYueTongYi.xcodeproj \
+            -scheme ZhongYueTongYi
+
+      - name: Build unsigned .app
+        run: |
+          xcodebuild -project swift-app/ZhongYueTongYi.xcodeproj \
+            -scheme ZhongYueTongYi \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ZhongYueTongYi.app" -type d | head -n 1)
+          echo "App.app at $APP_PATH"
+          test -n "$APP_PATH"
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r ZhongYueTongYi-swift-unsigned.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZhongYueTongYi-swift-unsigned
+          path: ZhongYueTongYi-swift-unsigned.ipa
