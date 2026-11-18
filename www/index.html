@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#ec795f" />
+<meta name="description" content="中越通译：中越聊天、语音视频通话，自动中越互译。Dịch Trung–Việt, trò chuyện và gọi điện." />
+<meta property="og:title" content="中越通译" />
+<meta property="og:description" content="中越聊天、语音视频通话，自动中越互译。Dịch Trung–Việt, trò chuyện và gọi điện." />
+<meta property="og:image" content="/icon-512.png" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="中越通译" />
+<meta name="twitter:description" content="中越聊天、语音视频通话，自动中越互译。" />
+<meta name="twitter:image" content="/icon-512.png" />
 <link rel="icon" type="image/png" href="/icon-192.png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/manifest.json" />
@@ -1240,6 +1249,106 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
 .pe-warn{background:#3a2f14;color:#e8c876}
 }
 
+/* 第 35 轮 */
+.auth-links{display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.auth-links button{background:none;border:0;color:var(--sage-deep);font-size:12.5px;padding:4px 2px;cursor:pointer}
+.trans-retry{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--coral-dark);background:none;border:1px solid var(--line);border-radius:8px;padding:3px 8px;cursor:pointer}
+#tabSettings .privacy-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0 0}
+#tabSettings .privacy-panel p{font-size:12.5px;color:var(--sub);line-height:1.9}
+/* 第 34 轮：快速翻译弹窗 + 使用帮助（对照越聊 eu.cc） */
+#quickTransBtn{margin-left:6px;padding:6px 12px;font-size:13px}
+.qt-panel textarea{width:100%;min-height:64px;resize:vertical}
+.qt-dir{width:100%;text-align:center;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg-soft);color:var(--ink);font-size:13.5px;font-weight:700;margin-bottom:10px}
+.qt-result{margin-top:10px;padding:12px;border-radius:12px;background:var(--sage-bg,#f3f6ed);font-size:14px;line-height:1.7;color:var(--ink);min-height:44px;white-space:pre-wrap;word-break:break-word}
+.qt-result:empty::before{content:"翻译结果会出现在这里";color:var(--sub);font-size:12.5px}
+#tabSettings .guide-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0 0}
+#tabSettings .guide-panel p{font-size:12.5px;color:var(--sub);line-height:1.9}
+
+/* ===== Round 36：我的页按参考截图改版（2026-11-19，Ha：按截图来，打包苹果原生）===== */
+/* 参考图：黑色动漫风封面横幅（头像+昵称+好友号压在图上，右上角齿轮）+ 浅灰底分组白卡片（彩色圆角方块图标 + 灰 ›）+ 白色底栏（当前页蓝色）。
+   只改我的页和底栏外观：不加新功能（会员/黑名单/对方性别/发现页都不加），不改 JS 逻辑、不加不减 id。
+   齿轮按钮是唯一的新增交互：点它等于点资料卡（打开“我的资料”面板），用 inline onclick 复用 profileTop 现成的处理，script 块一个字没动。 */
+/* 设置页底色改成 iOS 分组灰，整页通栏 */
+#tabSettings{background:#f2f2f7;margin:-6px -18px 0;padding:14px 18px 24px;gap:12px}
+#tabSettings .settings-head{display:none}
+/* 顺序：封面卡 → 资料面板 → 语言卡 → 通知/帮助卡 → 推荐卡 → 退出卡 → 房间（隐藏备用）→ 页脚 */
+#tabSettings>.profile-card{order:1;margin:-14px -18px 0;padding:0;background:transparent;border:0;box-shadow:none;border-radius:0;display:block}
+#tabSettings>.profile-edit-panel{order:2}
+#tabSettings>.set-lang{order:3}
+#tabSettings>.set-main{order:4}
+#tabSettings>.set-invite{order:5}
+#tabSettings>.set-logout{order:6}
+#tabSettings>.room-fold{order:7}
+#tabSettings>.home-foot{order:8;margin-top:0;text-align:left;font-size:11px;color:#8e8e93;line-height:1.7;padding:0 4px}
+/* 封面卡：通栏横幅，头像/昵称/好友号压在图上（avatar-ha.jpg + 深色渐变罩） */
+#tabSettings .profile-cover{position:relative;height:216px;background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,0) 38%,rgba(0,0,0,.68) 100%),url("avatar-ha.jpg") center 22%/cover no-repeat #151515}
+#tabSettings .cover-gear{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.38);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;padding:0}
+#tabSettings .cover-gear svg{width:20px;height:20px;display:block}
+#tabSettings .cover-gear:active{background:rgba(0,0,0,.55)}
+#tabSettings .profile-cover .profile-top{position:absolute;left:16px;right:16px;bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+#tabSettings .profile-cover #myAvatar{width:64px;height:64px;border-radius:50%;border:2.5px solid rgba(255,255,255,.92);box-shadow:0 4px 16px rgba(0,0,0,.35);flex:none}
+#tabSettings .profile-cover .profile-id{flex:1;min-width:0}
+#tabSettings .profile-cover .profile-nick{font-size:20px;font-weight:800;color:#fff}
+#tabSettings .profile-cover .profile-num{font-size:13px;color:rgba(255,255,255,.92);margin-top:4px}
+#tabSettings .profile-cover .profile-num #myNumTxt{font-size:13px;font-weight:700;color:#fff}
+#tabSettings .profile-cover .profile-num .copy-ico{color:#fff;font-size:16px}
+#tabSettings .profile-cover .profile-top .chev{font-size:24px;color:rgba(255,255,255,.9);margin-left:auto}
+/* 封面下面的操作卡：连接好友 / N位好友 / 在线状态 */
+#tabSettings .profile-actions{margin:12px 16px 0;background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+#tabSettings .profile-actions .pill-btn{background:#f2f2f7}
+#tabSettings .profile-status{margin-top:0;border-top:1px solid #f0f0f2;padding-top:12px}
+/* 分组白卡片 */
+#tabSettings .set-card{background:#fff;border-radius:16px;overflow:hidden;margin:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+#tabSettings .set-card>.setting-row{justify-content:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid #f0f0f2;font-size:15px}
+#tabSettings .set-card>.setting-row:last-child{border-bottom:0}
+#tabSettings .set-card>.setting-row:has(+.hidden){border-bottom:0}
+#tabSettings .set-card>.setting-row>span:last-child{margin-left:auto;color:#8e8e93}
+#tabSettings .set-card>.setting-row .chev{color:#c7c7cc}
+#tabSettings .set-card>.lang-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:14px 16px;margin:0;flex-wrap:nowrap}
+#tabSettings .set-card>.lang-card .lc-label{font-size:15px;font-weight:600}
+#tabSettings .set-card .trial-panel,#tabSettings .set-card .guide-panel,#tabSettings .set-card .privacy-panel{background:transparent;border:0;border-radius:0;padding:2px 16px 14px;margin:0;box-shadow:none}
+#tabSettings .set-card .trial-panel p,#tabSettings .set-card .guide-panel p,#tabSettings .set-card .privacy-panel p{font-size:13px;color:var(--sub);line-height:1.9}
+/* 彩色圆角方块图标（内联 SVG 白色描边，不用 emoji） */
+#tabSettings .set-ico{width:30px;height:30px;border-radius:8px;flex:none;display:inline-flex;align-items:center;justify-content:center;background:#007aff}
+#tabSettings .set-ico svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+#langRowBtn .set-ico{background:#007aff}
+#uiLangRowBtn .set-ico{background:#5ac8fa}
+#notifRowBtn .set-ico{background:#007aff}
+#guideRowBtn .set-ico{background:#ff9500}
+#helpRowBtn .set-ico{background:#af52de}
+#privacyRowBtn .set-ico{background:#8e8e93}
+#inviteRowBtn .set-ico{background:#ff9500}
+#tabSettings .set-card>.lang-card .set-ico{background:#34c759}
+/* 退出登录：单独白卡，红字居中 */
+#tabSettings .set-logout .logout-row{margin:0;padding:14px 16px;color:#ff3b30;font-size:15px;font-weight:600;text-align:center;width:100%;border:0;background:transparent;cursor:pointer}
+/* 底栏：白底 + 细顶线，当前页 iOS 蓝 */
+.tab-bar{background:#fff;border-top:1px solid #e5e5ea;padding:6px 8px calc(env(safe-area-inset-bottom, 0px) + 8px);gap:2px}
+.tab-btn{color:#8e8e93;border-radius:12px;padding:7px 0 6px}
+.tab-btn svg{width:24px;height:24px}
+.tab-btn span{font-size:10.5px;font-weight:600}
+.tab-btn.sel{color:#007aff;background:transparent}
+.tab-btn:active{background:#f2f2f7}
+/* 桌面端：负边距跟着 24px 内边距走 */
+@media (min-width:800px){
+#tabSettings{margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px}
+#tabSettings>.profile-card{margin-left:-24px;margin-right:-24px}
+}
+/* 深色模式：沿用 App 自身的深色 token */
+@media (prefers-color-scheme: dark){
+#tabSettings{background:var(--bg)}
+#tabSettings .set-card{background:var(--card)}
+#tabSettings .set-card>.setting-row{border-bottom-color:var(--line)}
+#tabSettings .set-card>.setting-row>span:last-child{color:var(--sub)}
+#tabSettings .set-card>.setting-row .chev{color:#636366}
+#tabSettings .profile-actions{background:var(--card)}
+#tabSettings .profile-actions .pill-btn{background:var(--bg-soft)}
+#tabSettings .profile-status{border-top-color:var(--line)}
+#tabSettings>.home-foot{color:var(--sub)}
+.tab-bar{background:#1c1c1e;border-top-color:#38383a}
+.tab-btn{color:#8e8e93}
+.tab-btn.sel{color:#0a84ff}
+.tab-btn:active{background:rgba(255,255,255,.06)}
+}
 </style>
 </head>
 <body>
@@ -1266,9 +1375,15 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         <input class="auth-input" id="authPass" type="password" autocomplete="current-password" placeholder="至少 6 位" />
       </div>
       <button id="authSubmit" type="button">登录</button>
+      <div class="auth-links">
+        <button id="authTryBtn" type="button">先体验文字翻译</button>
+        <button id="authForgotBtn" type="button">忘记密码</button>
+        <button id="authResendBtn" type="button">重发验证邮件</button>
+      </div>
       <div class="auth-err" id="authErr"></div>
       <div class="auth-hint hidden" id="authHint"></div>
       <div class="auth-note" id="authNote">用邮箱 + 密码登录。第一次用请先点「注册」，会有一封确认邮件发到你的邮箱，点开邮件里的链接确认后就能登录。<br/>Đăng nhập bằng email + mật khẩu. Lần đầu hãy bấm «Đăng ký», một email xác nhận sẽ được gửi đến hộp thư của bạn.</div>
+      <div class="auth-note" id="authPrivacy">隐私：文字翻译会发给翻译服务；通话字幕用浏览器识别，助手录音发给云端语音识别；聊天记录只存在你的手机上。</div>
     </div>
     <div class="ver-tag">版本号 v1</div>
   </div>
@@ -1291,6 +1406,7 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         <h1 class="page-title">消息</h1>
         <span class="page-count" id="msgCount">0</span>
         <button class="add-friend-btn plus-btn" id="addFriendBtn" type="button" aria-label="添加好友">＋</button>
+        <button class="add-friend-btn" id="quickTransBtn" type="button">翻译</button>
       </div>
       <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input id="convSearch" type="search" autocomplete="off" placeholder="搜索好友或聊天记录" aria-label="搜索好友或聊天记录" />
@@ -1341,6 +1457,8 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
     <div id="tabSettings" class="hidden">
 <div class="settings-head"><h1>我的中越通译</h1><p>你的语言，连接世界的方式。</p></div>
 <div class="profile-card">
+      <div class="profile-cover">
+        <button class="cover-gear" type="button" aria-label="我的资料" onclick="document.getElementById('profileTop').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 1 1 2.83 2.83l.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div class="profile-top" id="profileTop">
         <div class="avatar" id="myAvatar">?</div>
         <div class="profile-id">
@@ -1349,6 +1467,8 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         </div>
         <span class="chev">›</span>
       </div>
+      </div>
+      <div class="profile-actions">
       <div class="profile-pills">
         <button class="pill-btn" id="profileAddFriendBtn" type="button">＋ 连接好友</button>
         <button class="pill-btn" id="profileFriendsBtn" type="button"><span id="profileFriendCount">0位好友</span><span class="chev">›</span></button>
@@ -1357,6 +1477,7 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         <span class="status-pill" id="connPill">
           <span class="dot"></span><span id="connPillTxt">未连接</span>
         </span>
+      </div>
       </div>
     </div>
 <div class="profile-edit-panel hidden" id="profileEditPanel">
@@ -1378,8 +1499,9 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
       </div>
       <div class="panel-err" id="peErr"></div>
     </div>
-<button class="setting-row" id="langRowBtn" type="button">我的语言 <span><span id="langRowVal">简体中文</span> ⇄</span></button>
-<button class="setting-row" id="notifRowBtn" type="button">消息通知与来电提醒 <span id="notifRowVal">设置 🔔</span></button>
+<div class="set-card set-lang">
+<button class="setting-row" id="langRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>我的语言 <span><span id="langRowVal">简体中文</span> ⇄</span></button>
+<button class="setting-row" id="uiLangRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>界面语言 <span><span id="uiLangVal">简体中文</span> ⇄</span></button>
 <div class="lang-card lang-old">
       <div class="lc-label">我说的语言</div>
       <div class="lc-row">
@@ -1388,13 +1510,25 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
       </div>
     </div>
     <div class="lang-card">
-      <div class="lc-label">自动翻译</div>
+      <span class="set-ico"><svg viewBox="0 0 24 24"><path d="M4 5h9"/><path d="M8.5 3v2c0 3.5-2 6.5-4.5 8"/><path d="M5 8c1.5 2.5 4 5 7 6"/><path d="M12.5 21l4.5-10 4.5 10"/><path d="M14.5 17h5"/></svg></span><div class="lc-label">自动翻译</div>
       <button class="switch on" id="settingsTransSwitch" type="button" role="switch" aria-checked="true" aria-label="自动翻译开关"></button>
     </div>
-<button class="setting-row" id="helpRowBtn" type="button">体验版说明 <span><span class="chev">›</span></span></button>
+</div>
+<div class="set-card set-main">
+<button class="setting-row" id="notifRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>消息通知与来电提醒 <span id="notifRowVal">设置 🔔</span></button>
+<button class="setting-row" id="guideRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>使用帮助 <span><span class="chev">›</span></span></button>
+<div class="guide-panel hidden" id="guidePanel">
+      <p>01 · 先和翻译助手聊一聊：点开置顶的「翻译助手」，打字或说话，它会用另一种语言回你，还能陪你聊天。<br/>02 · 添加好友，开始对话：用对方的 6 位好友号添加好友，双方同时在线就能发消息；对方离线时消息存在服务器，上线后自动取回。<br/>03 · 语音和视频通话：打开好友聊天，点语音或视频通话，通话时有双语字幕，挂断双方同步。<br/>04 · 推送和资料：把网页装到主屏幕并允许通知，关掉 App 也能收到消息和来电提醒；点头像可以改头像、性别、昵称和好友号。</p>
+    </div>
+<button class="setting-row" id="helpRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>体验版说明 <span><span class="chev">›</span></span></button>
 <div class="trial-panel hidden" id="trialPanel">
       <p>01 · 先加好友：用对方的好友号添加，双方同时在线就能聊天。<br/>02 · 消息和来电提醒：把网页装到主屏幕后才能收到推送；对方离线时消息会存在服务器，上线后自动取回。<br/>03 · 通话：语音和视频通话都带双语字幕。</p>
     </div>
+<button class="setting-row" id="privacyRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>隐私说明 <span><span class="chev">›</span></span></button>
+<div class="privacy-panel hidden" id="privacyPanel">
+      <p>文字翻译：会发给翻译服务（Gemini / Cloudflare / Google / MyMemory），只发要翻译的那句话。<br/>通话字幕：先用浏览器自带语音识别，识别不到就用云端识别（Cloudflare 语音识别）。<br/>翻译助手录音：发给 Cloudflare 语音识别，识别成文字后再翻译、回答。<br/>朗读：用 Google 云端语音。<br/>消息：对方离线时存在 Cloudflare 服务器，对方上线后取走；聊天记录只存在你的手机上。<br/>推送：用网页推送，关掉 App 也能收到消息和来电提醒。</p>
+    </div>
+</div>
 <div class="room-fold hidden">
       <button class="room-fold-head" id="roomFoldBtn" type="button">
         <span>用房间号通话（备用）</span>
@@ -1420,7 +1554,8 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         <div class="panel-note">创建房间后，把邀请链接发给对方，对方点开登录后直接进房间；或者把 6 位房间号告诉对方，对方在这里输入加入。</div>
       </div>
     </div>
-<button class="setting-row" id="inviteRowBtn" type="button">推荐好友 <span><span class="chev">›</span></span></button>
+<div class="set-card set-invite">
+<button class="setting-row" id="inviteRowBtn" type="button"><span class="set-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>推荐好友 <span><span class="chev">›</span></span></button>
 <div class="trial-panel hidden" id="invitePanel">
       <img class="invite-qr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACCElEQVR42u1bW27DMAwjlgPkSL16jpQDGNAS62Fl2E+/Nhb0RxA0Qj/KUqRoB/bWOqB61av+P9WfiPW67q5P4N8B7PcFm+Xz7ar/wntL9X9bf+O7OdYXvoGlg3zs8w9wffaaz0/hy4qv0/Tmr4PsSE98d2sPhC87vpO68aCatPD9EHy3ImzSWfh+kP7awNRav/jaTfpLju/yz5v9epF/ZsZ3LXdVo41LQd01T+n35MN3IA3zQOivja7OrsTiLy2+eclAIwQ3SYychIUvqX+OXlz8Patxl6cWf5n91d2aw0mP6MVWU1FZbOHL6a/CUHki3e8u6o5AX/2Z2D/PrNnOTJ1LjoPEluwWvrzzUUYbAz2JTvcl/aXm7wSvWnNpMlowvUt/Wf2zbwMumS1Pnf1Z+Qb5fFTWCmmofu4USn+Z+dsABdYmUlNn6S/zfOTR5GP0fXZv6S93fx4t5Ig7K39V45LwJeTvcBuVh7DqkN3DX6k/M+uvpY3KAxt5nCP6MzT/UvP3qPz5SP1NzzU9tUl/yedfIKOrrr/ptOSvqP1zy5p7avWks/ozKX/zdu36OqoWcVYewhK+vP6qthbaWY2H+9J8xDz/Av2s5Mq0WtIh/aXHN19YeJjoip7Vn+n5C/QXyh4HZ7W/wK+/tbUQDblvIqk/8/vnNf+mnQawqT9/yvyr999Vr3qq+m8cnpeSyItFDwAAAABJRU5ErkJggg==" alt="扫码打开中越通译" />
       <div class="invite-note" id="inviteNote">好友扫码打开中越通译</div>
@@ -1428,7 +1563,10 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
       <button class="panel-btn" id="inviteCopyBtn" type="button">复制链接</button>
       <div class="invite-addme" id="inviteAddMe"></div>
     </div>
+</div>
+<div class="set-card set-logout">
 <button class="logout-row" id="logoutRowBtn" type="button">退出登录</button>
+</div>
 <div class="home-foot">
       聊天记录保存在当前浏览器。翻译常用语之外的文本会发送至 MyMemory；语音识别由浏览器提供，可能使用浏览器厂商的在线服务。
     </div>
@@ -1453,6 +1591,21 @@ button, a, input, select, textarea{ -webkit-tap-highlight-color:transparent; }
         <button class="panel-btn" id="friendSaveBtn" type="button">保存</button>
       </div>
       <div class="panel-err" id="friendErr"></div>
+    </div>
+</div>
+
+<!-- ================= 快速翻译浮层（第 34 轮） ================= -->
+<div class="friend-overlay hidden" id="quickTransOverlay">
+<div class="friend-panel qt-panel" id="quickTransPanel">
+      <div class="np-label" id="qtTitle">快速翻译</div>
+      <button class="qt-dir" id="qtDirBtn" type="button">中文 → 越南语</button>
+      <textarea class="panel-input" id="qtInput" rows="3" placeholder="输入要翻译的话…"></textarea>
+      <div class="panel-row" style="margin-top:10px">
+        <button class="panel-btn ghost" id="qtCloseBtn" type="button">关闭</button>
+        <button class="panel-btn" id="qtGoBtn" type="button">翻译一下</button>
+      </div>
+      <div class="qt-result" id="qtResult"></div>
+      <div class="panel-note">点一下翻译结果可以复制。不用加好友，直接翻。</div>
     </div>
 </div>
 
@@ -1702,6 +1855,10 @@ function renderMyProfile(){
 /* ================= 全局状态 ================= */
 var myLang = "zh";
 try { var savedUiLang = window.localStorage ? window.localStorage.getItem("zhyuetong-ui-lang") : null; if (savedUiLang === "vi" || savedUiLang === "zh") myLang = savedUiLang; } catch(e){}
+/* 第 35 轮：myLang 只管界面语言；speakLang 管我说的语言（语音识别/聊天/机器人/打招呼）。
+   老用户第一次进来：speakLang 跟界面语言一样，以后改界面不改说话语言。 */
+var speakLang = myLang;
+try { var savedSpeak = window.localStorage ? window.localStorage.getItem("zhyuetong-speak-lang") : null; if (savedSpeak === "vi" || savedSpeak === "zh") speakLang = savedSpeak; } catch(e){}
 var roomCode = null, isHost = false;
 var sessionPc = null, conn = null;   /* 当前通话/房间的 RTCPeerConnection + 它上面的聊天数据通道 */
 var connAttempt = null;              /* 还没 open 的会话连接（建连中），open 后清掉 */
@@ -1809,11 +1966,42 @@ var I18N = {
     settingsTitle: "我的中越通译",
     settingsSub: "你的语言，连接世界的方式。",
     copyNum: "复制",
-    langRow: "我的语言",
+    langRow: "我说的语言",
     notifRow: "消息通知与来电提醒",
     notifRowVal: "设置 🔔",
     helpRow: "体验版说明",
     trialNote: "01 · 先加好友：用对方的好友号添加，双方同时在线就能聊天。<br/>02 · 消息和来电提醒：把网页装到主屏幕后才能收到推送；对方离线时消息会存在服务器，上线后自动取回。<br/>03 · 通话：语音和视频通话都带双语字幕。",
+    quickTrans: "翻译",
+    quickTransTitle: "快速翻译",
+    quickTransPh: "输入要翻译的话…",
+    quickTransGo: "翻译一下",
+    quickTransDirZhVi: "中文 → 越南语",
+    quickTransDirViZh: "越南语 → 中文",
+    quickTransEmpty: "先输入要翻译的话",
+    quickTransFail: "翻译失败，请再试一次",
+    quickTransTranslating: "翻译中…",
+    quickTransCopied: "已复制",
+    quickTransClose: "关闭",
+    quickTransNote: "点一下翻译结果可以复制。不用加好友，直接翻。",
+    guideRow: "使用帮助",
+    guideNote: "01 · 先和翻译助手聊一聊：点开置顶的「翻译助手」，打字或说话，它会用另一种语言回你，还能陪你聊天。<br/>02 · 添加好友，开始对话：用对方的 6 位好友号添加好友，双方同时在线就能发消息；对方离线时消息存在服务器，上线后自动取回。<br/>03 · 语音和视频通话：打开好友聊天，点语音或视频通话，通话时有双语字幕，挂断双方同步。<br/>04 · 推送和资料：把网页装到主屏幕并允许通知，关掉 App 也能收到消息和来电提醒；点头像可以改头像、性别、昵称和好友号。",
+    uiLangRow: "界面语言",
+    privacyRow: "隐私说明",
+    privacyNote: "文字翻译：会发给翻译服务（Gemini / Cloudflare / Google / MyMemory），只发要翻译的那句话。<br/>通话字幕：先用浏览器自带语音识别，识别不到就用云端识别（Cloudflare 语音识别）。<br/>翻译助手录音：发给 Cloudflare 语音识别，识别成文字后再翻译、回答。<br/>朗读：用 Google 云端语音。<br/>消息：对方离线时存在 Cloudflare 服务器，对方上线后取走；聊天记录只存在你的手机上。<br/>推送：用网页推送，关掉 App 也能收到消息和来电提醒。",
+    authPrivacy: "隐私：文字翻译会发给翻译服务；通话字幕用浏览器识别，助手录音发给云端语音识别；聊天记录只存在你的手机上。",
+    authTry: "先体验文字翻译",
+    authForgot: "忘记密码",
+    authResend: "重发验证邮件",
+    authForgotNeedEmail: "先填邮箱，再点忘记密码",
+    authForgotSent: "重置密码的邮件已发到你的邮箱",
+    authResendSent: "验证邮件已重发，请去邮箱查看",
+    statusCloud: "正在用云端识别，直接说话即可",
+    statusRecogFail: "识别失败，点麦克风重试",
+    statusRecogRetry: "识别失败，正在重试…",
+    transRetry: "点一下重新翻译",
+    botNetFail: "网络有问题，录音没发出去，请检查网络再试一次",
+    botServiceFail: "语音服务暂时不可用，稍后再试",
+    botNoSound: "没听到声音，再说一遍吧",
     inviteRow: "推荐好友",
     inviteNote: "好友扫码打开中越通译",
     inviteAddMeTpl: "加我为好友：我的好友号 {num}",
@@ -1982,11 +2170,42 @@ var I18N = {
     settingsTitle: "Trung–Việt của tôi",
     settingsSub: "Ngôn ngữ của bạn, cách kết nối với thế giới.",
     copyNum: "Sao chép",
-    langRow: "Ngôn ngữ của tôi",
+    langRow: "Ngôn ngữ tôi nói",
     notifRow: "Thông báo tin nhắn và cuộc gọi",
     notifRowVal: "Cài đặt 🔔",
     helpRow: "Giới thiệu bản trải nghiệm",
     trialNote: "01 · Thêm bạn bè trước: thêm bằng số bạn bè của đối phương, cả hai cùng trực tuyến là trò chuyện được.<br/>02 · Thông báo tin nhắn và cuộc gọi: chỉ nhận được sau khi cài trang web lên màn hình chính; tin nhắn gửi khi đối phương ngoại tuyến sẽ được lưu trên máy chủ, họ lên mạng là tự nhận được.<br/>03 · Cuộc gọi: gọi thoại và gọi video đều có phụ đề song ngữ.",
+    quickTrans: "Dịch",
+    quickTransTitle: "Dịch nhanh",
+    quickTransPh: "Nhập câu cần dịch…",
+    quickTransGo: "Dịch ngay",
+    quickTransDirZhVi: "Tiếng Trung → Tiếng Việt",
+    quickTransDirViZh: "Tiếng Việt → Tiếng Trung",
+    quickTransEmpty: "Hãy nhập câu cần dịch trước",
+    quickTransFail: "Dịch thất bại, thử lại nhé",
+    quickTransTranslating: "Đang dịch…",
+    quickTransCopied: "Đã sao chép",
+    quickTransClose: "Đóng",
+    quickTransNote: "Bấm vào kết quả để sao chép. Không cần thêm bạn, dịch luôn được.",
+    guideRow: "Hướng dẫn sử dụng",
+    guideNote: "01 · Trò chuyện với Trợ lý dịch trước: mở «Trợ lý dịch» ở trên cùng, nhắn tin hoặc nói, trợ lý sẽ trả lời bằng ngôn ngữ còn lại và trò chuyện cùng bạn.<br/>02 · Thêm bạn bè, bắt đầu trò chuyện: thêm bằng số bạn bè 6 chữ số, cả hai cùng trực tuyến là nhắn tin được; tin nhắn gửi khi đối phương ngoại tuyến sẽ được lưu trên máy chủ, họ lên mạng là tự nhận được.<br/>03 · Gọi thoại và gọi video: mở cuộc trò chuyện với bạn bè, bấm gọi thoại hoặc gọi video, trong cuộc gọi có phụ đề song ngữ, cúp máy hai bên đồng bộ.<br/>04 · Thông báo và hồ sơ: cài trang web lên màn hình chính và cho phép thông báo, tắt App vẫn nhận được tin nhắn và cuộc gọi đến; bấm vào ảnh đại diện để đổi ảnh, giới tính, biệt danh và số bạn bè.",
+    uiLangRow: "Ngôn ngữ giao diện",
+    privacyRow: "Chính sách riêng tư",
+    privacyNote: "Dịch văn bản: gửi đến dịch vụ dịch (Gemini / Cloudflare / Google / MyMemory), chỉ gửi câu cần dịch.<br/>Phụ đề cuộc gọi: dùng nhận dạng giọng nói của trình duyệt trước, không nhận dạng được thì dùng nhận dạng đám mây (Cloudflare).<br/>Ghi âm trợ lý: gửi đến nhận dạng giọng nói Cloudflare, nhận dạng thành văn bản rồi dịch và trả lời.<br/>Đọc to: dùng giọng nói đám mây Google.<br/>Tin nhắn: khi đối phương ngoại tuyến sẽ lưu trên máy chủ Cloudflare, họ lên mạng là nhận được; lịch sử trò chuyện chỉ lưu trên điện thoại của bạn.<br/>Thông báo: dùng thông báo web, tắt App vẫn nhận được tin nhắn và cuộc gọi đến.",
+    authPrivacy: "Riêng tư: dịch văn bản sẽ gửi đến dịch vụ dịch; phụ đề cuộc gọi dùng nhận dạng của trình duyệt, ghi âm trợ lý gửi đến nhận dạng giọng nói đám mây; lịch sử trò chuyện chỉ lưu trên điện thoại của bạn.",
+    authTry: "Thử dịch văn bản trước",
+    authForgot: "Quên mật khẩu",
+    authResend: "Gửi lại email xác nhận",
+    authForgotNeedEmail: "Hãy nhập email trước, rồi bấm quên mật khẩu",
+    authForgotSent: "Đã gửi email đặt lại mật khẩu đến hộp thư của bạn",
+    authResendSent: "Đã gửi lại email xác nhận, hãy kiểm tra hộp thư",
+    statusCloud: "Đang nhận dạng bằng đám mây, cứ nói tự nhiên",
+    statusRecogFail: "Nhận dạng thất bại, bấm mic để thử lại",
+    statusRecogRetry: "Nhận dạng thất bại, đang thử lại…",
+    transRetry: "Bấm để dịch lại",
+    botNetFail: "Mạng có vấn đề, chưa gửi được bản ghi âm, hãy kiểm tra mạng rồi thử lại",
+    botServiceFail: "Dịch vụ giọng nói tạm thời không khả dụng, thử lại sau nhé",
+    botNoSound: "Không nghe thấy tiếng, bạn nói lại nhé",
     inviteRow: "Giới thiệu bạn bè",
     inviteNote: "Bạn bè quét mã để mở Dịch Trung–Việt",
     inviteAddMeTpl: "Thêm tôi làm bạn: Số bạn bè của tôi là {num}",
@@ -2160,6 +2379,9 @@ function statusText(key, name){
   if (key === "micDenied") return t.statusMicDenied;
   if (key === "noMic") return t.statusNoMic;
   if (key === "listening") return t.statusListening;
+  if (key === "cloud") return t.statusCloud;
+  if (key === "recogFail") return t.statusRecogFail;
+  if (key === "recogRetry") return t.statusRecogRetry;
   return "";
 }
 function setStatusDyn(key, isErr, name){
@@ -2270,11 +2492,26 @@ function applyUiLang(){
   tx(q(".settings-head h1"), t.settingsTitle);
   tx(q(".settings-head p"), t.settingsSub);
   txFirst($("langRowBtn"), t.langRow);
+  txFirst($("uiLangRowBtn"), t.uiLangRow);
+  txFirst($("privacyRowBtn"), t.privacyRow);
+  var pp = q("#privacyPanel p"); if (pp) pp.innerHTML = t.privacyNote;
+  tx($("authTryBtn"), t.authTry);
+  tx($("authForgotBtn"), t.authForgot);
+  tx($("authResendBtn"), t.authResend);
+  tx($("authPrivacy"), t.authPrivacy);
   txFirst($("notifRowBtn"), t.notifRow);
   tx($("notifRowVal"), t.notifRowVal);
   txFirst($("helpRowBtn"), t.helpRow);
   tx($("logoutRowBtn"), t.logout);
   var tp = q("#trialPanel p"); if (tp) tp.innerHTML = t.trialNote;
+  /* 第 34 轮：快速翻译 + 使用帮助 */
+  tx($("quickTransBtn"), t.quickTrans);
+  txFirst($("guideRowBtn"), t.guideRow);
+  var gp = q("#guidePanel p"); if (gp) gp.innerHTML = t.guideNote;
+  tx($("qtTitle"), t.quickTransTitle);
+  ph($("qtInput"), t.quickTransPh);
+  tx($("qtGoBtn"), t.quickTransGo);
+  tx($("qtCloseBtn"), t.quickTransClose);
   /* 设置页：推荐好友（第 28 轮） */
   txFirst($("inviteRowBtn"), t.inviteRow);
   tx($("inviteNote"), t.inviteNote);
@@ -2373,38 +2610,48 @@ function applyCallModeUI(){
 function renderLangPill(){
   $("langLeft").textContent = "Tiếng Việt";
   $("langRight").textContent = "Tiếng Trung";
-  $("langLeft").classList.toggle("cur", myLang === "vi");
-  $("langRight").classList.toggle("cur", myLang === "zh");
+  $("langLeft").classList.toggle("cur", speakLang === "vi");
+  $("langRight").classList.toggle("cur", speakLang === "zh");
 }
 function renderLangUI(){
   renderLangPill();
   var zh = $("homeLangZh"), vi = $("homeLangVi");
-  if (zh) zh.classList.toggle("sel", myLang === "zh");
-  if (vi) vi.classList.toggle("sel", myLang === "vi");
-  var lrv = $("langRowVal"); if (lrv) lrv.textContent = myLang === "zh" ? "简体中文" : "Tiếng Việt";
+  if (zh) zh.classList.toggle("sel", speakLang === "zh");
+  if (vi) vi.classList.toggle("sel", speakLang === "vi");
+  var lrv = $("langRowVal"); if (lrv) lrv.textContent = speakLang === "zh" ? "简体中文" : "Tiếng Việt";
   var topSel = $("topLangSel");
-  if (topSel && topSel.value !== myLang) topSel.value = myLang;
-  $("chatLangTxt").textContent = myLang === "zh" ? "中文" : "Tiếng Việt";
+  if (topSel && topSel.value !== speakLang) topSel.value = speakLang;
+  $("chatLangTxt").textContent = speakLang === "zh" ? "中文" : "Tiếng Việt";
+  var ulv = $("uiLangVal"); if (ulv) ulv.textContent = myLang === "zh" ? "简体中文" : "Tiếng Việt";
   applyUiLang();
 }
-function setMyLang(lang, silent){
+/* 第 35 轮：界面语言只改界面，不动说话语言 */
+function setUiLang(lang, silent){
   myLang = lang === "vi" ? "vi" : "zh";
   try { if (window.localStorage) window.localStorage.setItem("zhyuetong-ui-lang", myLang); } catch(e){}
-  recLang = myLang;
+  renderLangUI();
+  if (!silent) toast(myLang === "zh" ? "界面改成中文了" : "Đã đổi giao diện sang tiếng Việt");
+}
+/* 第 35 轮：我说的语言只改说话/识别/聊天方向，不动界面 */
+function setSpeakLang(lang, silent){
+  speakLang = lang === "vi" ? "vi" : "zh";
+  try { if (window.localStorage) window.localStorage.setItem("zhyuetong-speak-lang", speakLang); } catch(e){}
+  recLang = speakLang;
   silentCycles = 0; probeCycles = 0;
   renderLangUI();
-  if (!silent) toast(myLang === "zh" ? "我说中文 · 对方说越南语" : "Tôi nói tiếng Việt · Đối phương nói tiếng Trung");
-  if (conn && conn.open){ try { conn.send({ type: "hello", lang: myLang, name: myDisplayName() }); } catch(e){} }
+  if (!silent) toast(speakLang === "zh" ? "我说中文 · 对方说越南语" : "Tôi nói tiếng Việt · Đối phương nói tiếng Trung");
+  if (conn && conn.open){ try { conn.send({ type: "hello", lang: speakLang, name: myDisplayName() }); } catch(e){} }
   if (listenOn) restartRecognitionSoon(60);
 }
+function setMyLang(lang, silent){ setSpeakLang(lang, silent); }
 $("langPill").addEventListener("click", function(){
-  setMyLang(myLang === "zh" ? "vi" : "zh", false);
+  setSpeakLang(speakLang === "zh" ? "vi" : "zh", false);
 });
-$("homeLangZh").addEventListener("click", function(){ setMyLang("zh", false); });
-$("homeLangVi").addEventListener("click", function(){ setMyLang("vi", false); });
-$("topLangSel").addEventListener("change", function(){ setMyLang(this.value, false); });
+$("homeLangZh").addEventListener("click", function(){ setSpeakLang("zh", false); });
+$("homeLangVi").addEventListener("click", function(){ setSpeakLang("vi", false); });
+$("topLangSel").addEventListener("change", function(){ setSpeakLang(this.value, false); });
 $("chatLangBtn").addEventListener("click", function(){
-  setMyLang(myLang === "zh" ? "vi" : "zh", false);
+  setSpeakLang(speakLang === "zh" ? "vi" : "zh", false);
 });
 renderLangUI();
 
@@ -2539,7 +2786,7 @@ function fetchJson(url, ms){
       if (done) return; done = true;
       if (ctl){ try { ctl.abort(); } catch(e){} }
       reject(new Error("translate timeout"));
-    }, ms || 6000);
+    }, ms || 4000);
     fetch(url, ctl ? { signal: ctl.signal } : undefined)
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -2558,7 +2805,7 @@ function fetchJsonPost(url, body, ms){
       if (done) return; done = true;
       if (ctl){ try { ctl.abort(); } catch(e){} }
       reject(new Error("translate timeout"));
-    }, ms || 8000);
+    }, ms || 5000);
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2578,7 +2825,7 @@ var TRANSLATE_API = "https://zhong-yue-fanyi-api.vercel.app/api/translate";
 function translateViaServer(text, from, to){
   var fromCode = from === "zh" ? "zh-CN" : "vi";
   var toCode = to === "zh" ? "zh-CN" : "vi";
-  return fetchJsonPost(TRANSLATE_API, { text: text, from: fromCode, to: toCode }, 8000)
+  return fetchJsonPost(TRANSLATE_API, { text: text, from: fromCode, to: toCode }, 5000)
     .then(function(j){
       var out = j && j.translation ? String(j.translation).trim() : "";
       if (badTranslation(out, text)) throw new Error("bad server translation");
@@ -2622,7 +2869,7 @@ function translateViaWorker(text, from, to){
         if (done) return; done = true;
         if (ctl){ try { ctl.abort(); } catch(e){} }
         reject(new Error("worker translate timeout"));
-      }, 12000);
+      }, 8000);
       fetch(OFFLINE_API + "/translate", {
         method: "POST",
         headers: headers,
@@ -2642,13 +2889,55 @@ function translateViaWorker(text, from, to){
     });
   });
 }
+/* 第 35 轮：60 秒内失败过的接口先跳过，不再每次都等它超时；整条链最多等 12 秒 */
+var transBadUntil = {};
+function transProviderBad(name){ return (transBadUntil[name] || 0) > Date.now(); }
+function transMarkBad(name){ transBadUntil[name] = Date.now() + 60000; }
+function transTry(name, fn){
+  if (transProviderBad(name)) return Promise.reject(new Error("skip " + name));
+  return fn().catch(function(e){ transMarkBad(name); throw e; });
+}
 function translateText(text, from, to){
-  return translateViaServer(text, from, to).catch(function(){
-    return translateViaWorker(text, from, to);
+  var chain = transTry("server", function(){ return translateViaServer(text, from, to); })
+    .catch(function(){ return transTry("worker", function(){ return translateViaWorker(text, from, to); }); })
+    .catch(function(){ return transTry("google", function(){ return translateViaGoogle(text, from, to); }); })
+    .catch(function(){ return transTry("mymemory", function(){ return translateViaMyMemory(text, from, to); }); });
+  return Promise.race([chain, new Promise(function(_, rej){
+    setTimeout(function(){ rej(new Error("translate overall timeout")); }, 12000);
+  })]);
+}
+/* 第 35 轮：单条消息重译（点翻译失败那条下面的按钮） */
+function updateStoredTrans(user, entry, trans){
+  try {
+    var code = histKey(user); var arr = loadChatHistory(code);
+    for (var i = arr.length - 1; i >= 0; i--){
+      if (arr[i] && arr[i].id === entry.id && arr[i].sess === entry.sess){ arr[i].trans = trans; arr[i].transFail = false; break; }
+    }
+    saveChatHistory(code, arr);
+  } catch(e){}
+}
+function addTransRetry(entry, els){
+  if (!els || !els.transBlock || els.transBlock.querySelector(".trans-retry")) return;
+  var rb = document.createElement("button");
+  rb.className = "trans-retry"; rb.type = "button";
+  rb.textContent = (I18N[myLang] || I18N.zh).transRetry;
+  rb.addEventListener("click", function(){ retryChatTrans(entry, els); });
+  els.transBlock.appendChild(rb);
+}
+function retryChatTrans(entry, els){
+  if (!entry || !entry.orig) return;
+  var from = entry.from === "vi" ? "vi" : "zh", to = from === "zh" ? "vi" : "zh";
+  entry.pending = true; entry.transFail = false;
+  if (els && els.transEl){ els.transEl.classList.add("pending-txt"); els.transEl.textContent = (I18N[myLang] || I18N.zh).chatTranslating; }
+  if (els && els.transBlock){ els.transBlock.style.display = ""; var old = els.transBlock.querySelector(".trans-retry"); if (old) old.parentNode.removeChild(old); }
+  translateText(entry.orig, from, to).then(function(trans){
+    entry.pending = false; entry.trans = trans; entry.transFail = false;
+    if (els && els.transEl){ els.transEl.classList.remove("pending-txt"); els.transEl.textContent = trans; }
+    if (chatFriend) updateStoredTrans(chatFriend.user, entry, trans);
   }).catch(function(){
-    return translateViaGoogle(text, from, to);
-  }).catch(function(){
-    return translateViaMyMemory(text, from, to);
+    entry.pending = false; entry.transFail = true;
+    if (els && els.transEl){ els.transEl.classList.remove("pending-txt"); els.transEl.textContent = (I18N[myLang] || I18N.zh).chatTransFail; }
+    addTransRetry(entry, els);
   });
 }
 
@@ -2808,6 +3097,55 @@ function receiveRemoteTrans(data){
 
 /* ================= 语音识别（iPhone 非连续 + interim 稳定 1.2 秒成句） ================= */
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+/* 第 35 轮：通话字幕云端备用（浏览器识别不可用/连续失败时才用，录 4 秒发一次给 Worker Whisper） */
+var cloudMode = false, cloudRec = null, cloudRecTimer = null, cloudRecBusy = false, cloudRecSilent = false, srErrCount = 0;
+function startCloudRec(){
+  if (!listenOn || !cloudMode || cloudRecBusy) return;
+  if (!OFFLINE_API){ setStatusDyn("noSR", true); listenOn = false; setMicUI(); return; }
+  var stream = localStream;
+  if (!stream){
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ setStatusDyn("noMic", true); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(st){
+      if (!listenOn || !cloudMode) { try { st.getTracks().forEach(function(x){ x.stop(); }); } catch(e){} return; }
+      cloudRecStart(st, false);
+    }).catch(function(){ setStatusDyn("micDenied", true); });
+    return;
+  }
+  cloudRecStart(stream, true);
+}
+function cloudRecStart(stream, shared){
+  if (!listenOn || !cloudMode || cloudRecBusy) return;
+  var rec;
+  try { rec = new MediaRecorder(stream); } catch(e){ setStatusDyn("recogFail", true); return; }
+  cloudRec = rec; cloudRecBusy = true; cloudRecSilent = false;
+  var chunks = [];
+  rec.ondataavailable = function(ev){ if (ev.data && ev.data.size) chunks.push(ev.data); };
+  rec.onstop = function(){
+    cloudRec = null; cloudRecBusy = false;
+    if (!shared){ try { stream.getTracks().forEach(function(x){ x.stop(); }); } catch(e){} }
+    if (cloudRecSilent || !listenOn || !cloudMode) return;
+    if (!chunks.length){ cloudRecTimer = setTimeout(startCloudRec, 500); return; }
+    var blob = new Blob(chunks, { type: rec.mimeType || "audio/mp4" });
+    botBlobToB64(blob).then(function(b64){
+      return fetchJsonPost(OFFLINE_API + "/transcribe", { audio: b64, lang: recLang }, 15000);
+    }).then(function(j){
+      var text = j && j.text ? String(j.text).trim() : "";
+      if (text) processMessage(text, guessLang(text, recLang));
+      if (listenOn && cloudMode) cloudRecTimer = setTimeout(startCloudRec, 300);
+    }).catch(function(){
+      if (!listenOn || !cloudMode) return;
+      setStatusDyn("recogRetry", true);
+      cloudRecTimer = setTimeout(startCloudRec, 2000);
+    });
+  };
+  try { rec.start(); setStatusDyn("cloud", false); } catch(e){ cloudRec = null; cloudRecBusy = false; setStatusDyn("recogFail", true); return; }
+  cloudRecTimer = setTimeout(function(){ try { if (cloudRec) cloudRec.stop(); } catch(e){} }, 4500);
+}
+function stopCloudRec(){
+  cloudMode = false; srErrCount = 0;
+  if (cloudRecTimer){ clearTimeout(cloudRecTimer); cloudRecTimer = null; }
+  if (cloudRec){ cloudRecSilent = true; try { cloudRec.stop(); } catch(e){} cloudRec = null; cloudRecBusy = false; }
+}
 var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent || "") ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 function setMicUI(){
@@ -2817,8 +3155,9 @@ function setMicUI(){
 function startRecCycle(){
   if (!listenOn) return;
   if (!SR){
-    setStatusDyn("noSR", true);
-    listenOn = false; setMicUI();
+    /* 第 35 轮：浏览器没有语音识别，改用云端识别，不直接关麦 */
+    cloudMode = true; srErrCount = 0;
+    startCloudRec();
     return;
   }
   if (recognition || recStarting) return;
@@ -2855,6 +3194,7 @@ function startRecCycle(){
     if (interimText.trim()) promoteTimer = setTimeout(promoteInterim, 1200);
   }
   rec.onresult = function(ev){
+    srErrCount = 0;
     var interim = "";
     for (var i = 0; i < ev.results.length; i++){
       var res = ev.results[i];
@@ -2882,6 +3222,18 @@ function startRecCycle(){
   };
   rec.onerror = function(ev){
     cycleError = ev && ev.error ? ev.error : "";
+    /* 第 35 轮：网络/服务不可用连错两次，改用云端识别 */
+    if (cycleError === "network" || cycleError === "service-not-allowed"){
+      srErrCount++;
+      if (srErrCount >= 2 && !cloudMode){
+        cloudMode = true;
+        try { rec.abort(); } catch(e){}
+        recognition = null; recStarting = false;
+        setStatusDyn("cloud", false);
+        startCloudRec();
+        return;
+      }
+    }
     if (cycleError === "not-allowed" || cycleError === "service-not-allowed"){
       listenOn = false; setMicUI();
       setStatusDyn("micDenied", true);
@@ -2902,23 +3254,23 @@ function startRecCycle(){
     if (!listenOn){ intentionalRestart = false; return; }
     if (intentionalRestart){
       intentionalRestart = false;
-      recLang = myLang;
+      recLang = speakLang;
     } else if (conn && conn.open){
       if (cycleGotFinal){
         silentCycles = 0; probeCycles = 0;
-        if (recLang !== myLang) setMyLang(recLang, false);
-        recLang = myLang;
-      } else if (recLang !== myLang){
+        if (recLang !== speakLang) setMyLang(recLang, false);
+        recLang = speakLang;
+      } else if (recLang !== speakLang){
         probeCycles++;
-        if (probeCycles >= 3){ probeCycles = 0; silentCycles = 0; recLang = myLang; }
+        if (probeCycles >= 3){ probeCycles = 0; silentCycles = 0; recLang = speakLang; }
       } else {
         silentCycles++;
-        if (silentCycles >= 3){ silentCycles = 0; recLang = myLang === "zh" ? "vi" : "zh"; }
+        if (silentCycles >= 3){ silentCycles = 0; recLang = speakLang === "zh" ? "vi" : "zh"; }
       }
     } else if (!cycleGotFinal && cycleError !== "aborted"){
       recLang = recLang === "zh" ? "vi" : "zh";
     } else if (cycleGotFinal){
-      recLang = myLang;
+      recLang = speakLang;
     }
     scheduleRestart(cycleError === "no-speech" ? 200 : 350);
   };
@@ -2944,8 +3296,9 @@ function restartRecognitionSoon(ms){
 function setListen(on){
   listenOn = on;
   setMicUI();
+  if (!on){ stopCloudRec(); }
   if (on){
-    recLang = myLang;
+    recLang = speakLang;
     startRecCycle();
   } else {
     clearTimeout(restartTimer);
@@ -3225,10 +3578,10 @@ function wireSessionDc(dc, opts){
     if (!opts.iAmCaller && !opts.isRoom) markCallLogAnswered();
     remoteMsgs = {};
     setConn("on");
-    recLang = myLang;
+    recLang = speakLang;
     if (listenOn) restartRecognitionSoon(60);
     if (opts.isRoom) $("inviteBar").classList.add("hidden");
-    try { w.send({ type: "hello", lang: myLang, mode: callMode, name: myDisplayName() }); } catch(e){}
+    try { w.send({ type: "hello", lang: speakLang, mode: callMode, name: myDisplayName() }); } catch(e){}
     flushPending();
   };
   dc.onmessage = function(ev){
@@ -3391,7 +3744,7 @@ function copyText(text, okMsg){
 }
 var PUBLISHED_BASE = "https://zhong-yue-tong-hua-fanyi.vercel.app/";
 function inviteLink(){
-  return PUBLISHED_BASE + "?room=" + roomCode + "&peerlang=" + (myLang === "zh" ? "vi" : "zh") + "&mode=" + callMode;
+  return PUBLISHED_BASE + "?room=" + roomCode + "&peerlang=" + (speakLang === "zh" ? "vi" : "zh") + "&mode=" + callMode;
 }
 function copyInviteLink(){
   if (!roomCode) return;
@@ -3415,7 +3768,7 @@ function startRoom(code, host, mode){
   returnFriend = null;
   roomCode = code; isHost = host;
   subscribeRoomChannel(code);
-  recLang = myLang;
+  recLang = speakLang;
   $("roomPillTxt").textContent = roomCode;
   $("inviteRoomCode").textContent = roomCode;
   showCallScreen();
@@ -3424,7 +3777,7 @@ function startRoom(code, host, mode){
   try {
     var params = new URLSearchParams(window.location.search);
     params.set("room", roomCode);
-    params.set("peerlang", myLang);
+    params.set("peerlang", speakLang);
     params.set("mode", callMode);
     window.history.replaceState(null, "", window.location.pathname + "?" + params.toString());
   } catch(e){}
@@ -4262,7 +4615,7 @@ function seedBotIntro(){
   if (loadChatHistory(code).length) return false;
   var t = I18N[myLang] || I18N.zh;
   appendChatHistory(code, {
-    dir: "in", orig: t.botIntro, trans: "", from: myLang,
+    dir: "in", orig: t.botIntro, trans: "", from: speakLang,
     ts: Date.now(), id: ++msgSeq, sess: mySess
   });
   return true;
@@ -4277,7 +4630,7 @@ function seedBotUpgraded(){
   if (botUpgradedShown()) return;
   var t = I18N[myLang] || I18N.zh;
   appendChatHistory(histKey(BOT_USER), {
-    dir: "in", orig: t.botUpgraded, trans: "", from: myLang,
+    dir: "in", orig: t.botUpgraded, trans: "", from: speakLang,
     ts: Date.now(), id: ++msgSeq, sess: mySess
   });
   setBotUpgradedShown();
@@ -4311,7 +4664,7 @@ function botSay(orig, trans, from){
   };
   appendChatMsgEl(reply);
   appendChatHistory(histKey(BOT_USER), reply);
-  if (botSpeakOn()) speakCloud(orig, from || myLang);
+  if (botSpeakOn()) speakCloud(orig, from || speakLang);
 }
 function botChat(){
   var hist = loadChatHistory(histKey(BOT_USER)).slice(-8);
@@ -4321,7 +4674,7 @@ function botChat(){
     messages.push({ role: e.dir === "me" ? "user" : "assistant", content: String(e.orig).slice(0, 1000) });
   });
   if (!messages.length) return Promise.reject(new Error("no history"));
-  return fetchJsonPost(OFFLINE_API + "/chat", { messages: messages, lang: myLang }, 30000)
+  return fetchJsonPost(OFFLINE_API + "/chat", { messages: messages, lang: speakLang }, 30000)
     .then(function(j){
       var r = j && j.reply ? String(j.reply).trim() : "";
       if (!r) throw new Error("empty chat reply");
@@ -4367,7 +4720,7 @@ function botAnswer(text, userEls){
       botSay(trans, text, uOther);
     }).catch(function(){
       var fail = {
-        dir: "in", orig: t.botTransFail, trans: "", from: myLang,
+        dir: "in", orig: t.botTransFail, trans: "", from: speakLang,
         ts: Date.now(), id: ++msgSeq, sess: mySess
       };
       appendChatMsgEl(fail);
@@ -4435,21 +4788,30 @@ function toggleBotRec(){
     }
     $("chatMicBtn").classList.add("rec");
     botRecTimer = setTimeout(function(){ stopBotRec(false); }, 30000);
-  }).catch(function(){
-    toast(t.botNoMic);
+  }).catch(function(e){
+    var t2 = I18N[myLang] || I18N.zh;
+    if (e && (e.name === "NotAllowedError" || e.name === "SecurityError")) toast(t2.botNoMic);
+    else if (e && e.name === "NotFoundError") toast(t2.botNoMic);
+    else toast(t2.botNetFail);
   });
 }
 function botTranscribe(blob){
   var t = I18N[myLang] || I18N.zh;
+  if (!blob || !blob.size){ toast(t.botNoSound); return; }
   botBlobToB64(blob).then(function(b64){
-    return fetchJsonPost(OFFLINE_API + "/transcribe", { audio: b64, lang: myLang }, 30000);
+    return fetchJsonPost(OFFLINE_API + "/transcribe", { audio: b64, lang: speakLang }, 30000);
   }).then(function(j){
+    /* 服务端明确说不行：服务不可用；没返回文字：没听到声音 */
+    if (j && j.ok === false){ toast(t.botServiceFail); return; }
     var text = j && j.text ? String(j.text).trim() : "";
-    if (!text){ toast(t.botHeardNothing); return; }
+    if (!text){ toast(t.botNoSound); return; }
     var u = botUserEntry(text);
     botAnswer(text, u);
-  }).catch(function(){
-    toast(t.botHeardNothing);
+  }).catch(function(e){
+    /* 发不出去 / 超时：网络问题；其他：服务不可用 */
+    var m = e && e.message ? String(e.message) : "";
+    if (/timeout|network|Failed to fetch|Load failed/i.test(m)) toast(t.botNetFail);
+    else toast(t.botServiceFail);
   });
 }
 
@@ -5308,10 +5670,10 @@ function sendMedia(file, kind){
       var id = ++msgSeq, sess = mySess, ts = Date.now();
       var key = sess + ":" + id;
       var label = mediaLabel(kind, name);
-      var entry = { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: myLang, ts: ts, id: id, sess: sess, mediaKey: key, media: URL.createObjectURL(blob) };
+      var entry = { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: speakLang, ts: ts, id: id, sess: sess, mediaKey: key, media: URL.createObjectURL(blob) };
       var els = appendChatMsgEl(entry);
       saveMediaBlob(key, blob).catch(function(){});
-      appendChatHistory(histKey(f.user), { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: myLang, ts: ts, id: id, sess: sess, mediaKey: key });
+      appendChatHistory(histKey(f.user), { dir: "me", kind: kind, name: name, size: blob.size, mime: mime, orig: label, trans: "", from: speakLang, ts: ts, id: id, sess: sess, mediaKey: key });
       var reader = new FileReader();
       reader.onload = function(){
         var b64 = String(reader.result || "").split(",")[1] || "";
@@ -5328,7 +5690,7 @@ function sendMedia(file, kind){
           toast(I18N[myLang].mediaOffline);
         }
         var okMeta = false;
-        try { okMeta = c.send({ type: "chat-media-meta", sess: sess, id: id, kind: kind, name: name, size: blob.size, mime: mime, chunks: total, ts: ts, from: myLang, sender: myDisplayName() }) !== false; } catch(e){}
+        try { okMeta = c.send({ type: "chat-media-meta", sess: sess, id: id, kind: kind, name: name, size: blob.size, mime: mime, chunks: total, ts: ts, from: speakLang, sender: myDisplayName() }) !== false; } catch(e){}
         if (!okMeta){ failMedia(); return; }
         (function sendNext(){
           if (failed) return;
@@ -5465,6 +5827,7 @@ function appendChatMsgEl(entry){
     : entry.transFail ? I18N[myLang].chatTransFail : "";
   tb.appendChild(lab); tb.appendChild(t);
   bub.appendChild(tb);
+  if (entry.transFail) addTransRetry(entry, { transEl: t, transBlock: tb });
   var meta = document.createElement("div");
   meta.className = "msg-meta" + (entry.failed ? " fail" : "");
   meta.textContent = metaTextFor(entry);
@@ -5534,7 +5897,7 @@ function wireChatDc(user, dc){
   dc.onopen = function(){
     if (chatConns[user] !== w) return;
     renderFriends();
-    try { w.send({ type: "hello", name: myDisplayName(), lang: myLang }); } catch(e){}
+    try { w.send({ type: "hello", name: myDisplayName(), lang: speakLang }); } catch(e){}
     if (chatFriend && chatFriend.user === user){
       setChatState("on");
       sendReadReceipt(user);
@@ -5872,7 +6235,7 @@ function sendChat(){
     sendBotText(text);
     return;
   }
-  var from = myLang, to = from === "zh" ? "vi" : "zh";
+  var from = speakLang, to = from === "zh" ? "vi" : "zh";
   var entry = {
     dir: "me", orig: text, trans: "", from: from,
     ts: Date.now(), id: ++msgSeq, sess: mySess, pending: translateOn
@@ -5921,6 +6284,7 @@ function sendChat(){
       els.transBlock.style.display = "";
       els.transEl.classList.remove("pending-txt");
       els.transEl.textContent = I18N[myLang].chatTransFailSend;
+      addTransRetry(entry, els);
       deliver("");
     });
 }
@@ -5950,7 +6314,7 @@ function toggleDictation(){
   var rec;
   try { rec = new SR(); } catch(e){ toast(I18N[myLang].toastSRFail); return; }
   dictRec = rec;
-  rec.lang = myLang === "zh" ? "zh-CN" : "vi-VN";
+  rec.lang = speakLang === "zh" ? "zh-CN" : "vi-VN";
   rec.interimResults = true;
   try { rec.continuous = !IS_IOS; } catch(e){}
   rec.onresult = function(ev){
@@ -6017,7 +6381,7 @@ function hangupCore(){
   }
   localVideo.srcObject = null; remoteVideo.srcObject = null;
   try {
-    window.history.replaceState(null, "", window.location.pathname + "?peerlang=" + myLang);
+    window.history.replaceState(null, "", window.location.pathname + "?peerlang=" + speakLang);
   } catch(e){}
   var backF = returnFriend; returnFriend = null;
   started = false; sessionKind = null; sessionBegun = false;
@@ -6215,6 +6579,32 @@ $("authSubmit").addEventListener("click", function(){
     }).catch(function(e){ authError(friendlyAuthErr(e)); });
   }
 });
+/* 第 35 轮：登录页三个小入口 */
+$("authTryBtn").addEventListener("click", function(){ openQuickTrans(); });
+$("authForgotBtn").addEventListener("click", function(){
+  var t = I18N[myLang] || I18N.zh;
+  var email = emailKey($("authEmail").value);
+  if (!email || email.indexOf("@") < 1){ authError(t.authForgotNeedEmail); return; }
+  if (!sb){ authError(t.authErrNotReady); return; }
+  $("authErr").textContent = "";
+  sb.auth.resetPasswordForEmail(email).then(function(res){
+    var h = $("authHint");
+    if (res.error){ authError(friendlyAuthErr(res.error)); return; }
+    h.textContent = t.authForgotSent; h.classList.remove("hidden");
+  }).catch(function(e){ authError(friendlyAuthErr(e)); });
+});
+$("authResendBtn").addEventListener("click", function(){
+  var t = I18N[myLang] || I18N.zh;
+  var email = emailKey($("authEmail").value);
+  if (!email || email.indexOf("@") < 1){ authError(t.authForgotNeedEmail); return; }
+  if (!sb){ authError(t.authErrNotReady); return; }
+  $("authErr").textContent = "";
+  sb.auth.resend({ type: "signup", email: email }).then(function(res){
+    var h = $("authHint");
+    if (res.error){ authError(friendlyAuthErr(res.error)); return; }
+    h.textContent = t.authResendSent; h.classList.remove("hidden");
+  }).catch(function(e){ authError(friendlyAuthErr(e)); });
+});
 $("authPass").addEventListener("keydown", function(ev){
   if (ev.key === "Enter"){ ev.preventDefault(); $("authSubmit").click(); }
 });
@@ -6300,7 +6690,15 @@ $("copyNumBtn").addEventListener("click", function(){
 $("profileTop").addEventListener("click", function(){ openProfileEdit(); });
 /* “我的语言”那行：点一下切一次语言（跟输入框旁边的语言按钮同一个入口） */
 $("langRowBtn").addEventListener("click", function(){
-  setMyLang(myLang === "zh" ? "vi" : "zh", false);
+  setSpeakLang(speakLang === "zh" ? "vi" : "zh", false);
+});
+/* 第 35 轮：界面语言那行，点一下只换界面 */
+$("uiLangRowBtn").addEventListener("click", function(){
+  setUiLang(myLang === "zh" ? "vi" : "zh", false);
+});
+/* 第 35 轮：隐私说明那行，展开/收起 */
+$("privacyRowBtn").addEventListener("click", function(){
+  $("privacyPanel").classList.toggle("hidden");
 });
 /* “消息通知与来电提醒”那行：查一下通知状态；没开就请求开启 */
 $("notifRowBtn").addEventListener("click", function(){
@@ -6323,6 +6721,51 @@ $("notifRowBtn").addEventListener("click", function(){
 /* “体验版说明”那行：展开/收起说明面板 */
 $("helpRowBtn").addEventListener("click", function(){
   $("trialPanel").classList.toggle("hidden");
+});
+/* 第 34 轮：使用帮助那行，展开/收起 4 步说明 */
+$("guideRowBtn").addEventListener("click", function(){
+  $("guidePanel").classList.toggle("hidden");
+});
+/* 第 34 轮：快速翻译，不用加好友，直接调现有翻译链 */
+var qtFrom = "zh";
+function qtDirText(){
+  var d = (I18N[myLang] || I18N.zh);
+  return qtFrom === "zh" ? d.quickTransDirZhVi : d.quickTransDirViZh;
+}
+function openQuickTrans(){
+  qtFrom = (myLang === "vi") ? "vi" : "zh";
+  var d = (I18N[myLang] || I18N.zh);
+  $("qtDirBtn").textContent = qtDirText();
+  $("qtResult").textContent = "";
+  $("quickTransOverlay").classList.remove("hidden");
+  setTimeout(function(){ try { $("qtInput").focus(); } catch(e){} }, 50);
+}
+function closeQuickTrans(){ $("quickTransOverlay").classList.add("hidden"); }
+$("quickTransBtn").addEventListener("click", openQuickTrans);
+$("qtCloseBtn").addEventListener("click", closeQuickTrans);
+$("quickTransOverlay").addEventListener("click", function(ev){
+  if (ev.target === $("quickTransOverlay")) closeQuickTrans();
+});
+$("qtDirBtn").addEventListener("click", function(){
+  qtFrom = qtFrom === "zh" ? "vi" : "zh";
+  $("qtDirBtn").textContent = qtDirText();
+});
+$("qtGoBtn").addEventListener("click", function(){
+  var d = (I18N[myLang] || I18N.zh);
+  var text = $("qtInput").value.trim();
+  if (!text){ toast(d.quickTransEmpty); return; }
+  var to = qtFrom === "zh" ? "vi" : "zh";
+  $("qtResult").textContent = d.quickTransTranslating;
+  translateText(text, qtFrom, to).then(function(out){
+    $("qtResult").textContent = out || d.quickTransFail;
+  }).catch(function(){
+    $("qtResult").textContent = d.quickTransFail;
+  });
+});
+$("qtResult").addEventListener("click", function(){
+  var d = (I18N[myLang] || I18N.zh);
+  var out = $("qtResult").textContent.trim();
+  if (out && out !== d.quickTransTranslating && out !== d.quickTransFail) copyText(out, d.quickTransCopied);
 });
 /* 推荐好友：点开面板，显示 App 链接 + 二维码；打开时刷一遍链接和好友号 */
 $("inviteRowBtn").addEventListener("click", function(){

@@ -1,5 +1,5 @@
 /* 中越通译 PWA service worker：只缓存 app 外壳，聊天/通话/接口一律走网络；收到推送时显示通知 */
-var CACHE = "zhong-yue-v6";
+var CACHE = "zhong-yue-v8";
 var SHELL = ["/", "/index.html", "/manifest.json", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png", "/avatar-m1.jpg", "/avatar-m2.jpg", "/avatar-f1.jpg", "/avatar-f2.jpg", "/avatar-ha.jpg"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
