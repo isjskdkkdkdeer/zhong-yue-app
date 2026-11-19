@@ -33,7 +33,7 @@ final class AuthViewModel: ObservableObject {
     @Published var gender = "male"
 
     /// 从相册自选的头像 / 封面背景（UIImage）。有它时优先显示，预设头像只作后备。
-    /// 照片存本机 Documents 里，同样按邮箱分开存。
+    /// 照片存本机 Documents 里，同样按邮箱分开存。换性别不会动它。
     @Published var customAvatarImage: UIImage?
     @Published var customCoverImage: UIImage?
 
@@ -145,7 +145,7 @@ final class AuthViewModel: ObservableObject {
     }
 
     /// 从相册选一张做头像：立刻生效（写文件 + 记标记 + 刷新界面）。
-    /// 换性别只影响预设头像，不会覆盖这张照片。
+    /// 换性别不会动它。
     func setCustomAvatar(_ image: UIImage) {
         let email = self.email
         guard !email.isEmpty else { return }
@@ -234,9 +234,9 @@ final class AuthViewModel: ObservableObject {
     static let femaleAvatars = ["AvatarF1", "AvatarF2"]
     static let avatarAssetNames = maleAvatars + femaleAvatars
 
-    /// 当前性别可选的头像。
+    /// 全部预设头像（男女都显示，不再按性别筛选）。
     var avatarOptions: [String] {
-        gender == "female" ? Self.femaleAvatars : Self.maleAvatars
+        Self.avatarAssetNames
     }
 
     // MARK: - 改资料（Supabase updateUser）

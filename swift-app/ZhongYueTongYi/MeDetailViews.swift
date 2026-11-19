@@ -400,14 +400,35 @@ struct ProfileDetailView: View {
     }
 }
 
-// MARK: - 子页：头像（4 张预设 + 从相册选，点一下立刻生效）
+// MARK: - 子页：头像（5 张预设全显示 + 从相册选，点一下立刻生效）
 
 struct AvatarEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
     @State private var showPicker = false
 
-    private var avatarOptions: [String] {
-        auth.gender == "female" ? AuthViewModel.femaleAvatars : AuthViewModel.maleAvatars
+    /// 全部预设头像，男女都显示，不再按性别筛选。
+    private var maleOptions: [String] { AuthViewModel.maleAvatars }
+    private var femaleOptions: [String] { AuthViewModel.femaleAvatars }
+
+    private func avatarButton(for name: String) -> some View {
+        Button {
+            auth.clearCustomAvatar()
+            auth.avatarAssetName = name
+            auth.saveLocalProfile()
+        } label: {
+            Image(name)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 56, height: 56)
+                .clipShape(Circle())
+                .overlay(
+                    Circle().stroke(
+                        auth.customAvatarImage == nil && auth.avatarAssetName == name ? Color(red: 0, green: 0.48, blue: 1) : Color(.systemGray4),
+                        lineWidth: auth.customAvatarImage == nil && auth.avatarAssetName == name ? 3 : 1
+                    )
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     var body: some View {
@@ -432,31 +453,25 @@ struct AvatarEditorView: View {
                 }
                 .padding(.vertical, 8)
             }
-            Section {
+            Section("男头像") {
                 HStack(spacing: 16) {
-                    ForEach(avatarOptions, id: \.self) { name in
-                        Button {
-                            auth.clearCustomAvatar()
-                            auth.avatarAssetName = name
-                            auth.saveLocalProfile()
-                        } label: {
-                            Image(name)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 56, height: 56)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle().stroke(
-                                        auth.customAvatarImage == nil && auth.avatarAssetName == name ? Color(red: 0, green: 0.48, blue: 1) : Color(.systemGray4),
-                                        lineWidth: auth.customAvatarImage == nil && auth.avatarAssetName == name ? 3 : 1
-                                    )
-                                )
-                        }
-                        .buttonStyle(.plain)
+                    ForEach(maleOptions, id: \.self) { name in
+                        avatarButton(for: name)
                     }
                     Spacer()
                 }
                 .padding(.vertical, 4)
+            }
+            Section("女头像") {
+                HStack(spacing: 16) {
+                    ForEach(femaleOptions, id: \.self) { name in
+                        avatarButton(for: name)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+            }
+            Section {
                 Button {
                     showPicker = true
                 } label: {
@@ -563,14 +578,8 @@ struct GenderEditorView: View {
         List {
             ForEach([("male", "男"), ("female", "女")], id: \.0) { code, name in
                 Button {
+                    // 性别只管性别，不再自动换头像——头像只由用户在头像选择器里自己选。
                     auth.gender = code
-                    // 换性别只影响预设头像：自己从相册选的照片不换。
-                    if auth.customAvatarImage == nil {
-                        let options = code == "female" ? AuthViewModel.femaleAvatars : AuthViewModel.maleAvatars
-                        if !options.contains(auth.avatarAssetName) {
-                            auth.avatarAssetName = options[0]
-                        }
-                    }
                     auth.saveLocalProfile()
                 } label: {
                     HStack {
