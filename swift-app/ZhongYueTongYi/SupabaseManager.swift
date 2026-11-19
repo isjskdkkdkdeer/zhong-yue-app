@@ -57,6 +57,8 @@ final class AuthViewModel: ObservableObject {
     var phoneNumber: String { metadataString("phone") }
     var signature: String { metadataString("signature") }
 
+    private let client = SupabaseManager.shared.client
+
     var isSignedIn: Bool { session != nil }
     var currentUser: User? { session?.user }
 
