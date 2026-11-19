@@ -2,6 +2,7 @@ import SwiftUI
 import CoreImage
 import PhotosUI
 import UIKit
+import UniformTypeIdentifiers
 
 // MARK: - 当前头像（相册自选的照片优先，没有就用预设头像）
 
@@ -83,6 +84,11 @@ enum Ringtone: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     static let defaultTone = Ringtone.xylophone
 
+    /// 整段音调播完要多久（试听完自动返回用）。
+    var totalDuration: Double {
+        notes.reduce(0) { $0 + $1.duration + $1.gap }
+    }
+
     var notes: [RingtoneNote] {
         switch self {
         case .doorbell:
@@ -130,11 +136,109 @@ enum Ringtone: String, CaseIterable, Identifiable {
     }
 }
 
+/// 内置免费歌曲（Kevin MacLeod，CC-BY 3.0 协议，incompetech.com）。
+/// 以 Data 资产形式放进工程，每首剪成 30 秒（铃声只响 30 秒）。
+struct BuiltinSong: Identifiable {
+    let assetName: String  // Data 资产名
+    let title: String
+    let artist: String
+    var id: String { "builtin:\(assetName)" }
+}
+
+let builtinSongs: [BuiltinSong] = [
+    BuiltinSong(assetName: "Carefree", title: "Carefree", artist: "Kevin MacLeod"),
+    BuiltinSong(assetName: "EasyLemon", title: "Easy Lemon", artist: "Kevin MacLeod"),
+    BuiltinSong(assetName: "BossaAntigua", title: "Bossa Antigua", artist: "Kevin MacLeod"),
+]
+
+/// 用户自己从文件里选的歌：文件存在 Documents/zy-ringtone-songs/，列表存在 UserDefaults。
+struct UserSong: Codable, Identifiable {
+    let id: String        // UUID
+    let fileName: String  // 存在 Documents 里的文件名（id + 后缀）
+    let displayName: String  // 原文件名（去掉后缀），列表里显示
+}
+
+enum UserSongStore {
+    static let listKey = "zy-ringtone-songs"
+
+    static func songsDirectory() -> URL {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("zy-ringtone-songs")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    static func load() -> [UserSong] {
+        guard let data = UserDefaults.standard.data(forKey: listKey),
+              let list = try? JSONDecoder().decode([UserSong].self, from: data) else { return [] }
+        return list
+    }
+
+    static func save(_ list: [UserSong]) {
+        if let data = try? JSONEncoder().encode(list) {
+            UserDefaults.standard.set(data, forKey: listKey)
+        }
+    }
+
+    /// 加一首歌：把源文件拷进 Documents，返回新建的 UserSong；不支持的格式返回 nil。
+    static func add(sourceURL: URL) -> UserSong? {
+        let ext = sourceURL.pathExtension.lowercased()
+        guard ["mp3", "m4a", "wav", "aac", "aif", "aiff", "caf"].contains(ext) else { return nil }
+        let id = UUID().uuidString
+        let fileName = id + "." + ext
+        let dest = songsDirectory().appendingPathComponent(fileName)
+        do {
+            if FileManager.default.fileExists(atPath: dest.path) {
+                try FileManager.default.removeItem(at: dest)
+            }
+            try FileManager.default.copyItem(at: sourceURL, to: dest)
+        } catch {
+            return nil
+        }
+        let displayName = sourceURL.deletingPathExtension().lastPathComponent
+        var list = load()
+        let song = UserSong(id: id, fileName: fileName, displayName: displayName)
+        list.append(song)
+        save(list)
+        return song
+    }
+
+    static func remove(_ song: UserSong) {
+        try? FileManager.default.removeItem(at: songsDirectory().appendingPathComponent(song.fileName))
+        save(load().filter { $0.id != song.id })
+    }
+
+    static func fileURL(for song: UserSong) -> URL {
+        songsDirectory().appendingPathComponent(song.fileName)
+    }
+}
+
+/// 铃声选择值（UserDefaults 的 zy-ringtone 键）的显示名：
+/// 音调直接是名字；歌曲要解析出来显示歌名。
+enum RingtoneSelection {
+    static func displayName(for stored: String) -> String {
+        if Ringtone(rawValue: stored) != nil { return stored }
+        if stored.hasPrefix("builtin:") {
+            let asset = String(stored.dropFirst("builtin:".count))
+            return builtinSongs.first { $0.assetName == asset }?.title ?? stored
+        }
+        if stored.hasPrefix("user:") {
+            let id = String(stored.dropFirst("user:".count))
+            return UserSongStore.load().first { $0.id == id }?.displayName ?? "我的歌曲"
+        }
+        return stored
+    }
+}
+
 /// 铃声试听播放器：把音符合成一段 PCM，用 AVAudioPlayerNode 播一次。
 /// 不用录音文件，全部现算。
 final class RingtonePlayer: ObservableObject {
+    /// 共用一个播放器：试听完页面自动返回后，声音还能继续响完。
+    static let shared = RingtonePlayer()
+
     private var engine: AVAudioEngine?
     private var node: AVAudioPlayerNode?
+    private var audioPlayer: AVAudioPlayer?
 
     func play(_ tone: Ringtone) {
         stop()
@@ -183,11 +287,42 @@ final class RingtonePlayer: ObservableObject {
         self.node = node
     }
 
+    /// 播一首歌（内置歌传 Data，用户选的歌传文件 URL）。
+    func playSong(data: Data) {
+        stop()
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            // 播放会话设不上就照常试播。
+        }
+        guard let player = try? AVAudioPlayer(data: data) else { return }
+        player.prepareToPlay()
+        player.play()
+        audioPlayer = player
+    }
+
+    func playSong(url: URL) {
+        stop()
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            // 播放会话设不上就照常试播。
+        }
+        guard let player = try? AVAudioPlayer(contentsOf: url) else { return }
+        player.prepareToPlay()
+        player.play()
+        audioPlayer = player
+    }
+
     func stop() {
         node?.stop()
         engine?.stop()
+        audioPlayer?.stop()
         node = nil
         engine = nil
+        audioPlayer = nil
     }
 }
 
@@ -265,7 +400,7 @@ struct ProfileDetailView: View {
                 }
                 // 第二组：来电铃声
                 sectionCard {
-                    profileRow(title: "来电铃声", value: ringtone, page: .ringtone)
+                    profileRow(title: "来电铃声", value: RingtoneSelection.displayName(for: ringtone), page: .ringtone)
                 }
                 // 第三组（账号）：邮箱 / 修改密码 / 封面背景
                 sectionCard {
@@ -404,6 +539,7 @@ struct ProfileDetailView: View {
 
 struct AvatarEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var showPicker = false
 
     /// 全部预设头像，男女都显示，不再按性别筛选。
@@ -415,6 +551,8 @@ struct AvatarEditorView: View {
             auth.clearCustomAvatar()
             auth.avatarAssetName = name
             auth.saveLocalProfile()
+            // 选完自动回资料页。
+            dismiss()
         } label: {
             Image(name)
                 .resizable()
@@ -488,6 +626,11 @@ struct AvatarEditorView: View {
         .sheet(isPresented: $showPicker) {
             PhotoPicker { image in
                 auth.setCustomAvatar(image)
+                // 相册选完也自动回资料页（等相册弹层关掉再回）。
+                Task {
+                    try? await Task.sleep(nanoseconds: 400_000_000)
+                    dismiss()
+                }
             }
         }
     }
@@ -497,6 +640,7 @@ struct AvatarEditorView: View {
 
 struct NicknameEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var nickname = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -562,7 +706,8 @@ struct NicknameEditorView: View {
         defer { isSaving = false }
         do {
             try await auth.updateMetadata(["nickname": .string(nick)])
-            infoMessage = "已保存"
+            // 保存成功自动回资料页。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -573,6 +718,7 @@ struct NicknameEditorView: View {
 
 struct GenderEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
@@ -581,6 +727,8 @@ struct GenderEditorView: View {
                     // 性别只管性别，不再自动换头像——头像只由用户在头像选择器里自己选。
                     auth.gender = code
                     auth.saveLocalProfile()
+                    // 选完自动回资料页。
+                    dismiss()
                 } label: {
                     HStack {
                         Text(name)
@@ -607,6 +755,7 @@ struct GenderEditorView: View {
 
 struct RegionEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var country = ""
     @State private var city = ""
     @State private var isSaving = false
@@ -697,7 +846,8 @@ struct RegionEditorView: View {
                 "region_country": .string(country.trimmingCharacters(in: .whitespaces)),
                 "region_city": .string(city.trimmingCharacters(in: .whitespaces)),
             ])
-            infoMessage = "已保存"
+            // 保存成功自动回资料页。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -708,6 +858,7 @@ struct RegionEditorView: View {
 
 struct PhoneEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var phone = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -770,7 +921,8 @@ struct PhoneEditorView: View {
         defer { isSaving = false }
         do {
             try await auth.updateMetadata(["phone": .string(phone.trimmingCharacters(in: .whitespaces))])
-            infoMessage = "已保存"
+            // 保存成功自动回资料页。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -781,6 +933,7 @@ struct PhoneEditorView: View {
 
 struct FriendNumberEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var friendNumber = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -851,9 +1004,9 @@ struct FriendNumberEditorView: View {
         isSaving = true
         defer { isSaving = false }
         do {
-            let oldNum = auth.friendNumber
             try await auth.updateMetadata(["num": .string(num)])
-            infoMessage = num == oldNum ? "已保存" : "已保存。好友号已改，别人用旧号找不到你，需要重新加好友"
+            // 保存成功自动回资料页（改号的提醒在编辑页底部已经写了）。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -908,6 +1061,7 @@ struct MyQRView: View {
 
 struct NudgeEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var suffix = ""
     @State private var infoMessage: String?
 
@@ -934,7 +1088,8 @@ struct NudgeEditorView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("保存") {
                     auth.setNudgeText(suffix.trimmingCharacters(in: .whitespaces))
-                    infoMessage = "已保存"
+                    // 保存成功自动回资料页。
+                    dismiss()
                 }
             }
         }
@@ -946,6 +1101,7 @@ struct NudgeEditorView: View {
 
 struct SignatureEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var signature = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -1007,40 +1163,72 @@ struct SignatureEditorView: View {
         defer { isSaving = false }
         do {
             try await auth.updateMetadata(["signature": .string(signature.trimmingCharacters(in: .whitespaces))])
-            infoMessage = "已保存"
+            // 保存成功自动回资料页。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 }
 
-// MARK: - 子页：来电铃声（点一下试听，选中存本机）
+// MARK: - 子页：来电铃声（7 个音调 + 3 首内置歌 + 自己从文件里选的歌；点一下试听，听完自动回资料页）
 
 struct RingtonePickerView: View {
+    @Environment(\.dismiss) private var dismiss
     @AppStorage("zy-ringtone") private var selected = Ringtone.defaultTone.rawValue
-    @StateObject private var player = RingtonePlayer()
+    @State private var userSongs: [UserSong] = UserSongStore.load()
+    @State private var showDocPicker = false
+    @State private var docPickerError: String?
+    @State private var dismissTask: Task<Void, Never>?
+
+    private var player: RingtonePlayer { RingtonePlayer.shared }
 
     var body: some View {
         List {
-            Section {
+            Section("音调") {
                 ForEach(Ringtone.allCases) { tone in
-                    Button {
+                    ringtoneRow(title: tone.rawValue, isSelected: selected == tone.rawValue) {
                         selected = tone.rawValue
                         player.play(tone)
-                    } label: {
-                        HStack {
-                            Text(tone.rawValue)
-                                .foregroundColor(.primary)
-                            Spacer()
-                            if selected == tone.rawValue {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
-                        }
+                        // 试听完自动回资料页（音调播完 + 留 0.4 秒）。
+                        scheduleDismiss(after: tone.totalDuration + 0.4)
                     }
                 }
+            }
+            Section("歌曲") {
+                ForEach(builtinSongs) { song in
+                    ringtoneRow(title: "\(song.title) · \(song.artist)", isSelected: selected == song.id) {
+                        selected = song.id
+                        if let data = NSDataAsset(name: song.assetName)?.data {
+                            player.playSong(data: data)
+                        }
+                        // 歌只听个开头，2 秒后自动回资料页，歌继续响完。
+                        scheduleDismiss(after: 2.0)
+                    }
+                }
+            }
+            Section("我的歌曲") {
+                ForEach(userSongs) { song in
+                    ringtoneRow(title: song.displayName, isSelected: selected == "user:\(song.id)") {
+                        selected = "user:\(song.id)"
+                        player.playSong(url: UserSongStore.fileURL(for: song))
+                        scheduleDismiss(after: 2.0)
+                    }
+                }
+                .onDelete(perform: deleteUserSongs)
+                Button {
+                    showDocPicker = true
+                } label: {
+                    Label("从文件里选歌曲", systemImage: "folder")
+                }
             } footer: {
-                Text("点一下试听，选中后保存到来电铃声设置里；通话功能接上后，来电就响这个铃声。")
+                Text("从文件里选的歌只支持 mp3、m4a、wav，存在本机；左滑可以删。选中的歌以后来电就响它。")
+            }
+            if let docPickerError {
+                Section {
+                    Text(docPickerError)
+                        .foregroundColor(.red)
+                }
             }
         }
         .listStyle(.plain)
@@ -1049,7 +1237,90 @@ struct RingtonePickerView: View {
         .navigationTitle("来电铃声")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
-        .onDisappear { player.stop() }
+        .sheet(isPresented: $showDocPicker) {
+            AudioDocumentPicker { url in
+                if UserSongStore.add(sourceURL: url) != nil {
+                    userSongs = UserSongStore.load()
+                    docPickerError = nil
+                } else {
+                    docPickerError = "这首歌加不进来，换个 mp3、m4a 或 wav 文件试试"
+                }
+            }
+        }
+        .onDisappear {
+            dismissTask?.cancel()
+        }
+    }
+
+    private func ringtoneRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title)
+                    .foregroundColor(.primary)
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+    }
+
+    /// 试听完自动回资料页；中途点了别的铃声就取消上一次的返回、重新计时。
+    private func scheduleDismiss(after seconds: Double) {
+        dismissTask?.cancel()
+        dismissTask = Task {
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            dismiss()
+        }
+    }
+
+    private func deleteUserSongs(at offsets: IndexSet) {
+        for index in offsets {
+            let song = userSongs[index]
+            if selected == "user:\(song.id)" {
+                // 删的是正在用的铃声，换回默认木琴。
+                selected = Ringtone.defaultTone.rawValue
+            }
+            UserSongStore.remove(song)
+        }
+        userSongs = UserSongStore.load()
+    }
+}
+
+/// 系统文件选择器：只让选音频文件（mp3、m4a、wav），以拷贝方式打开。
+struct AudioDocumentPicker: UIViewControllerRepresentable {
+    var onPick: (URL) -> Void
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(
+            forOpeningContentTypes: [UTType.mp3, UTType.mpeg4Audio, UTType.wav],
+            asCopy: true
+        )
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPick: onPick)
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    final class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let onPick: (URL) -> Void
+
+        init(onPick: @escaping (URL) -> Void) {
+            self.onPick = onPick
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            if let url = urls.first {
+                onPick(url)
+            }
+        }
     }
 }
 
@@ -1057,6 +1328,7 @@ struct RingtonePickerView: View {
 
 struct EmailEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var email = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -1125,14 +1397,16 @@ struct EmailEditorView: View {
             return
         }
         if newEmail == auth.email {
-            infoMessage = "邮箱没变，不用保存"
+            // 没变也直接回资料页。
+            dismiss()
             return
         }
         isSaving = true
         defer { isSaving = false }
         do {
             try await auth.updateEmail(newEmail)
-            infoMessage = "确认邮件已发到新邮箱，点开确认后才生效"
+            // 保存成功自动回资料页（确认邮件已发到新邮箱，点开确认后才生效）。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -1143,6 +1417,7 @@ struct EmailEditorView: View {
 
 struct PasswordEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var newPassword = ""
     @State private var confirmPassword = ""
     @State private var isSaving = false
@@ -1201,7 +1476,8 @@ struct PasswordEditorView: View {
         errorMessage = nil
         infoMessage = nil
         if newPassword.isEmpty && confirmPassword.isEmpty {
-            infoMessage = "密码没改"
+            // 没改也直接回资料页。
+            dismiss()
             return
         }
         if newPassword.count < 6 {
@@ -1216,9 +1492,8 @@ struct PasswordEditorView: View {
         defer { isSaving = false }
         do {
             try await auth.updatePassword(newPassword)
-            infoMessage = "密码已改"
-            newPassword = ""
-            confirmPassword = ""
+            // 保存成功自动回资料页。
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -1229,6 +1504,7 @@ struct PasswordEditorView: View {
 
 struct CoverEditorView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var showPicker = false
 
     var body: some View {
@@ -1267,6 +1543,8 @@ struct CoverEditorView: View {
                     if auth.customCoverImage != nil {
                         Button("恢复默认") {
                             auth.clearCustomCover()
+                            // 恢复完自动回资料页。
+                            dismiss()
                         }
                         .buttonStyle(.bordered)
                     }
@@ -1282,6 +1560,11 @@ struct CoverEditorView: View {
         .sheet(isPresented: $showPicker) {
             PhotoPicker { image in
                 auth.setCustomCover(image)
+                // 相册选完也自动回资料页（等相册弹层关掉再回）。
+                Task {
+                    try? await Task.sleep(nanoseconds: 400_000_000)
+                    dismiss()
+                }
             }
         }
     }
