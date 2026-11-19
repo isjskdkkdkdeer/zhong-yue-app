@@ -10,13 +10,20 @@ struct CallsView: View {
         NavigationStack {
             Group {
                 if callManager.callLog.isEmpty {
-                    PlaceholderView(
-                        icon: "phone.fill",
-                        title: "还没有通话记录",
-                        subtitle: "在好友聊天页点电话按钮，或在好友行左滑点语音 / 视频，就能打给好友。"
-                    )
+                    VStack(spacing: 16) {
+                        signalingStatusText
+                            .padding(.top, 12)
+                        PlaceholderView(
+                            icon: "phone.fill",
+                            title: "还没有通话记录",
+                            subtitle: "在好友聊天页点电话按钮，或在好友行左滑点语音 / 视频，就能打给好友。"
+                        )
+                    }
                 } else {
                     List {
+                        Section {
+                            signalingStatusText
+                        }
                         ForEach(callManager.callLog) { entry in
                             Button {
                                 Task {
@@ -58,6 +65,21 @@ struct CallsView: View {
             }
             .navigationTitle("通话")
         }
+    }
+
+    /// 来电信令状态（第 11 步）：没连上就接不到来电，先看这里是不是“未连接”。
+    private var signalingStatusText: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(callManager.signalingConnected ? Color.green : Color.red)
+                .frame(width: 8, height: 8)
+            Text(callManager.signalingConnected
+                 ? "来电监听：已连接"
+                 : "来电监听：未连接（接不到来电，检查网络后把 App 切到后台再回来）")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 16)
     }
 
     private func callDetail(_ entry: CallLogEntry) -> String {

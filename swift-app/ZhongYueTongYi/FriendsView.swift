@@ -179,6 +179,15 @@ final class FriendStore: ObservableObject {
         save()
     }
 
+    /// 是不是好友：先看本机列表，没有就从服务器同步一次再看。
+    /// （第 11 步：对方刚接受请求时，本机列表可能还没同步——只看本机会
+    /// 把真好友判成陌生人，来电会被悄悄丢掉、发消息会被错误地拦住。）
+    func isFriend(_ number: String, token: String?) async -> Bool {
+        if friends.contains(where: { $0.id == number }) { return true }
+        await sync(token: token)
+        return friends.contains(where: { $0.id == number })
+    }
+
     /// 添加好友（本机列表）。6 位数字、未重复才成功。
     /// 注意：现在加好友走服务器（addFriend），这个只留给本地兜底。
     @discardableResult

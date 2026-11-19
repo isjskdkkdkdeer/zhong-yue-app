@@ -5,6 +5,7 @@ import AVFoundation
 /// 底部输入框 + 发送；按住麦克风录音（最长 30 秒）发给助手。
 struct ChatView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var friendStore: FriendStore
     @StateObject private var store: ChatStore
     @StateObject private var recorder = VoiceRecorder()
 
@@ -50,12 +51,34 @@ struct ChatView: View {
             // 好友聊天发消息要带令牌和我的名字；进聊天页就拉一次收件箱，轮询改成 3 秒。
             store.serverToken = auth.session?.accessToken
             store.myDisplayName = auth.displayName
+            // 第 11 步：打开这个会话就清未读、记下来（这个会话的新消息不记未读、不弹横幅）；
+            // 发消息前先验好友关系（本机列表没有就从服务器同步一次再看），还不是好友就弹框说清楚。
+            MessageSyncService.shared.currentOpenConversationId = conversationId
+            MessageSyncService.shared.clearUnread(for: conversationId)
+            if !isBot {
+                store.notFriendNotice = { number in
+                    if await friendStore.isFriend(number, token: auth.session?.accessToken) { return nil }
+                    if friendStore.pendingRequests.contains(where: { $0.fromNum == number }) {
+                        return "对方已向你发来好友请求，去好友页接受后才能发消息"
+                    }
+                    return "你们还不是好友：先去好友页看看好友请求，成为好友后才能发消息"
+                }
+            }
             MessageSyncService.shared.setPollInterval(3)
             Task { await MessageSyncService.shared.pollNow() }
         }
         .onDisappear {
             // 离开聊天页，轮询回到列表页的 5 秒。
+            if MessageSyncService.shared.currentOpenConversationId == conversationId {
+                MessageSyncService.shared.currentOpenConversationId = nil
+            }
             MessageSyncService.shared.setPollInterval(5)
+        }
+        .alert(store.sendNotice ?? "", isPresented: Binding(
+            get: { store.sendNotice != nil },
+            set: { if !$0 { store.sendNotice = nil } }
+        )) {
+            Button("知道了") { store.sendNotice = nil }
         }
         .onChange(of: auth.session?.accessToken ?? "") { _, newToken in
             store.serverToken = newToken.isEmpty ? nil : newToken

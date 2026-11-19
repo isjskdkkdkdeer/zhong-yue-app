@@ -137,6 +137,8 @@ final class CallManager: ObservableObject {
     @Published private(set) var localVideoTrack: RTCVideoTrack?
     /// 通话记录（本机）。
     @Published private(set) var callLog: [CallLogEntry] = []
+    /// 来电信令有没有连上（通话页显示给用户看：没连上就接不到来电）。
+    @Published private(set) var signalingConnected = false
 
     // MARK: 内部状态
 
@@ -148,7 +150,10 @@ final class CallManager: ObservableObject {
     private var capturer: RTCCameraVideoCapturer?
 
     private var myNumber = ""
-    private var isFriendCheck: ((String) -> Bool)?
+    /// 是不是好友的判断（第 11 步改成异步：先看本机列表，没有就从服务器同步一次再看；
+    /// 只看本机会误判——对方刚接受请求时本机列表可能还没同步，真好友会被当成陌生号码、
+    /// 来电悄悄丢掉。没设这个闭包就不校验（直接接，别把旧流程堵死）。
+    private var isFriendCheck: ((String) async -> Bool)?
     private var channel: RealtimeChannelV2?
     private var broadcastSub: RealtimeSubscription?
     private var peerChannels: [String: RealtimeChannelV2] = [:]
@@ -179,7 +184,7 @@ final class CallManager: ObservableObject {
 
     /// MainTabView 登录后调：记下我的好友号和“是不是好友”的判断，
     /// 然后订阅我的来电频道。
-    func configure(myNumber: String, isFriend: @escaping (String) -> Bool) {
+    func configure(myNumber: String, isFriend: @escaping (String) async -> Bool) {
         self.myNumber = myNumber
         self.isFriendCheck = isFriend
     }
@@ -204,6 +209,7 @@ final class CallManager: ObservableObject {
         signalingRetryTask?.cancel()
         signalingRetryTask = nil
         broadcastSub = nil
+        signalingConnected = false
         if let channel {
             await channel.unsubscribe()
             self.channel = nil
@@ -223,14 +229,18 @@ final class CallManager: ObservableObject {
         }
         do {
             try await ch.subscribeWithError()
+            signalingConnected = true
             return true
         } catch {
+            signalingConnected = false
             return false
         }
     }
 
     /// 给对方发一条信令（往对方的频道发）。对方频道没订阅过就先订阅再发。
-    private func sendSignal(_ payload: JSONObject, to peer: String) async {
+    /// 返回有没有发出去（第 11 步：以前发失败也悄悄吞掉，拨打方只会干等 45 秒
+    /// “对方没有接听”，根本不知道呼叫根本没发出去）。
+    private func sendSignal(_ payload: JSONObject, to peer: String) async -> Bool {
         let client = SupabaseManager.shared.client
         let topic = "zy-call-\(peer)"
         let ch: RealtimeChannelV2
@@ -245,14 +255,15 @@ final class CallManager: ObservableObject {
                 try await ch.subscribeWithError()
                 subscribedPeerTopics.insert(topic)
             } catch {
-                return
+                return false
             }
         }
         await ch.broadcast(event: "call-signal", message: payload)
+        return true
     }
 
     /// 发一条信令的快捷写法（kind + 对方号码 + 通话 id + 扩展字段）。
-    private func sendSignal(kind: String, to peer: String, callId: String, extra: JSONObject = [:]) async {
+    private func sendSignal(kind: String, to peer: String, callId: String, extra: JSONObject = [:]) async -> Bool {
         var payload: JSONObject = [
             "kind": .string(kind),
             "from": .string(myNumber),
@@ -260,7 +271,7 @@ final class CallManager: ObservableObject {
             "callId": .string(callId),
         ]
         for (k, v) in extra { payload[k] = v }
-        await sendSignal(payload, to: peer)
+        return await sendSignal(payload, to: peer)
     }
 
     // MARK: - 收信令
@@ -319,6 +330,9 @@ final class CallManager: ObservableObject {
 
     /// 对方打来电话：不是好友不接（陌生号码直接忽略，不响铃）；
     /// 我正在通话中就回“正忙”。
+    /// 第 11 步：好友校验先看本机列表，没有就从服务器同步一次再看——
+    /// 对方刚接受请求时本机列表可能还没同步，只看本机会把真好友的来电悄悄丢掉。
+    /// 校验要走一次网络，响铃会晚一会儿（不到 1 秒），但不会再丢真来电。
     private func handleInvite(from: String, callId: String, json: JSONObject) {
         guard let isVideo = json["isVideo"]?.boolValue,
               let sdp = json["sdp"]?.stringValue, !sdp.isEmpty else { return }
@@ -326,30 +340,35 @@ final class CallManager: ObservableObject {
             Task { await self.sendSignal(kind: "busy", to: from, callId: callId) }
             return
         }
-        guard isFriendCheck?(from) == true else { return }
-        let invite = CallInvitation(
-            callId: callId, fromNumber: from,
-            fromName: "好友 \(from)", isVideo: isVideo, offerSdp: sdp
-        )
-        pendingInvite = invite
-        self.callId = callId
-        isCaller = false
-        isVideoCall = isVideo
-        peerNumber = from
-        peerDisplayName = invite.fromName
-        state = .incoming
-        incomingInvitation = invite
-        startRingtoneLoop()
-        // 45 秒没人接：自动挂断，记一次未接来电。
-        timeoutTask?.cancel()
-        timeoutTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(45 * 1_000_000_000))
-            guard let self, self.state == .incoming, self.callId == callId else { return }
-            await self.sendSignal(kind: "decline", to: from, callId: callId)
-            self.addLog(peerNumber: from, peerName: invite.fromName, isVideo: isVideo,
-                        direction: "in", missed: true, duration: 0)
-            self.teardown()
-            self.state = .idle
+        Task { [weak self] in
+            guard let self else { return }
+            if let check = self.isFriendCheck, await !check(from) { return }
+            // 校验期间对方可能又打来一个、或者我已经拨出去了：再确认一次还是空闲才弹。
+            guard self.state == .idle else { return }
+            let invite = CallInvitation(
+                callId: callId, fromNumber: from,
+                fromName: "好友 \(from)", isVideo: isVideo, offerSdp: sdp
+            )
+            self.pendingInvite = invite
+            self.callId = callId
+            self.isCaller = false
+            self.isVideoCall = isVideo
+            self.peerNumber = from
+            self.peerDisplayName = invite.fromName
+            self.state = .incoming
+            self.incomingInvitation = invite
+            self.startRingtoneLoop()
+            // 45 秒没人接：自动挂断，记一次未接来电。
+            self.timeoutTask?.cancel()
+            self.timeoutTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(45 * 1_000_000_000))
+                guard let self, self.state == .incoming, self.callId == callId else { return }
+                await self.sendSignal(kind: "decline", to: from, callId: callId)
+                self.addLog(peerNumber: from, peerName: invite.fromName, isVideo: isVideo,
+                            direction: "in", missed: true, duration: 0)
+                self.teardown()
+                self.state = .idle
+            }
         }
     }
 
@@ -367,6 +386,13 @@ final class CallManager: ObservableObject {
         }
         guard peer != myNumber else {
             callAlert = CallAlert(title: "打不了电话", message: "不能给自己打电话。")
+            return
+        }
+        // 第 11 步：还不是好友先拦住，明确告诉用户（以前是直接拨出去，
+        // 对方那边悄悄丢掉，拨打方只会干等 45 秒“对方没有接听”）。
+        // 校验先看本机列表，没有就从服务器同步一次再看，防本机列表过期误拦。
+        if let check = isFriendCheck, await !check(peer) {
+            callAlert = CallAlert(title: "还不是好友", message: "你们还不是好友：对方还没接受你的好友请求（或你还没接受对方的请求），成为好友后才能打电话。先去好友页处理好友请求。")
             return
         }
         if let err = await ensurePermissions(isVideo: isVideo) {
@@ -393,10 +419,15 @@ final class CallManager: ObservableObject {
         state = .outgoing
         showActiveCall = true
         startRingbackLoop()
-        await sendSignal(kind: "invite", to: peer, callId: callId, extra: [
+        // 呼叫发不出去就直接告诉用户，别让用户干等 45 秒“对方没有接听”。
+        let inviteSent = await sendSignal(kind: "invite", to: peer, callId: callId, extra: [
             "isVideo": .bool(isVideo),
             "sdp": .string(offer.sdp),
         ])
+        guard inviteSent else {
+            endCall(reason: .failed, notice: "呼叫没发出去，请检查网络再试")
+            return
+        }
         // 45 秒对方没接：挂断，提示对方没有接听。
         timeoutTask?.cancel()
         timeoutTask = Task { @MainActor [weak self] in
@@ -436,9 +467,14 @@ final class CallManager: ObservableObject {
         pendingInvite = nil
         callStatusText = "正在连接…"
         callStartDate = Date()
-        await sendSignal(kind: "accept", to: peerNumber, callId: callId, extra: [
+        // 接听信号发不出去就告诉用户（不然对方那边一直响、这边却没接通）。
+        let acceptSent = await sendSignal(kind: "accept", to: peerNumber, callId: callId, extra: [
             "sdp": .string(answer.sdp),
         ])
+        guard acceptSent else {
+            endCall(reason: .failed, notice: "接听信号没发出去，请检查网络再试")
+            return
+        }
     }
 
     /// 拒接来电。

@@ -142,10 +142,16 @@ final class ChatStore: ObservableObject {
 
     @Published private(set) var messages: [ChatMessage] = []
     @Published var voiceError: String?
+    /// 发消息被拦住时的提示（还不是好友时弹框说清楚原因，不悄悄失败）。
+    @Published var sendNotice: String?
 
     /// 发好友消息用的服务器令牌和我的名字（ChatView 打开聊天页时填进来；助手聊天不用）。
     var serverToken: String?
     var myDisplayName: String = ""
+    /// 还不是好友时返回提示文案，成了好友返回 nil（ChatView 打开聊天页时填进来；
+    /// 里面先看本机列表，没有就从服务器同步一次再看，防本机列表过期误拦）。
+    /// 没填这个闭包就不校验（直接发，别把旧流程堵死）。
+    var notFriendNotice: ((String) async -> String?)?
 
     private let storageKey: String
     private let workerBase = URL(string: "https://zhong-yue-offline.jameswilson199079.workers.dev")!
@@ -180,6 +186,23 @@ final class ChatStore: ObservableObject {
               let decoded = try? JSONDecoder().decode([ChatMessage].self, from: data),
               let last = decoded.last else { return nil }
         return last.orig
+    }
+
+    /// 最后一条消息的时间（消息列表里“非好友会话”按这个排先后）。
+    static func lastMessageDate(for conversationId: String) -> Date? {
+        guard let data = UserDefaults.standard.data(forKey: "zy-chat-\(conversationId)"),
+              let decoded = try? JSONDecoder().decode([ChatMessage].self, from: data),
+              let last = decoded.last else { return nil }
+        return last.ts
+    }
+
+    /// 本机有聊天记录的会话号（好友 + 还没成好友就发来消息的人都包括；
+    /// 云函数发消息不验好友关系，这种消息照样进收件箱，列表页不能只显示好友）。
+    static func storedConversationIds() -> [String] {
+        let prefix = "zy-chat-"
+        return UserDefaults.standard.dictionaryRepresentation().keys
+            .filter { $0.hasPrefix(prefix) }
+            .map { String($0.dropFirst(prefix.count)) }
     }
 
     private func load() {
@@ -228,21 +251,30 @@ final class ChatStore: ObservableObject {
     func sendFriendText(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        let lang = detectLanguage(trimmed)
-        let msg = ChatMessage(dir: .me, orig: trimmed, trans: "翻译中…", from: lang)
-        append(msg)
-        // 延迟修（第 9 步）：以前是串行的——先等翻译链跑完（Gemini 5 秒 → 云函数 8 秒 →
-        // 谷歌 4 秒，整链最多 12 秒），翻译完才调 POST /send；对方最晚 12 秒后才能
-        // 收到，再加上接收端 10 秒一轮的轮询，一条消息最慢 20 多秒才出现。
-        // 现在改成并行：先发原文（不带译文，译文空着；对方收到后本机翻译链补译文，
-        // pollNow 里本来就这么处理），翻译在另一条任务里跑，译完只补译文。
-        Task { await self.sendToServer(msg, trans: "") }
         Task {
-            do {
-                let trans = try await translator.translate(text: trimmed, from: lang, to: lang.other)
-                self.updateTranslationOnly(id: msg.id, trans: trans, failed: false)
-            } catch {
-                self.updateTranslationOnly(id: msg.id, trans: "翻译失败（上面是原话）", failed: true)
+            // 还不是好友先拦住：明确告诉用户原因，不要悄悄失败。
+            // （对方还没接受请求时，云函数其实照样会存这条消息，对方收件箱也能拉到——
+            // 但列表页上没这行、对方那边也说不清，所以发之前先说清楚。）
+            if let notice = await self.notFriendNotice?(self.conversationId) {
+                self.sendNotice = notice
+                return
+            }
+            let lang = detectLanguage(trimmed)
+            let msg = ChatMessage(dir: .me, orig: trimmed, trans: "翻译中…", from: lang)
+            self.append(msg)
+            // 延迟修（第 9 步）：以前是串行的——先等翻译链跑完（Gemini 5 秒 → 云函数 8 秒 →
+            // 谷歌 4 秒，整链最多 12 秒），翻译完才调 POST /send；对方最晚 12 秒后才能
+            // 收到，再加上接收端 10 秒一轮的轮询，一条消息最慢 20 多秒才出现。
+            // 现在改成并行：先发原文（不带译文，译文空着；对方收到后本机翻译链补译文，
+            // pollNow 里本来就这么处理），翻译在另一条任务里跑，译完只补译文。
+            Task { await self.sendToServer(msg, trans: "") }
+            Task {
+                do {
+                    let trans = try await self.translator.translate(text: trimmed, from: lang, to: lang.other)
+                    self.updateTranslationOnly(id: msg.id, trans: trans, failed: false)
+                } catch {
+                    self.updateTranslationOnly(id: msg.id, trans: "翻译失败（上面是原话）", failed: true)
+                }
             }
         }
     }
