@@ -180,6 +180,7 @@ struct ProfileDetailView: View {
                 Text("封面背景")
             } footer: {
                 Text("封面背景存在本机；没选过就用默认图。")
+            }
 
             Section {
                 TextField("昵称", text: $nickname)
