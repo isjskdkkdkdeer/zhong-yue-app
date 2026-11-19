@@ -45,10 +45,15 @@ struct ChatView: View {
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            // 好友聊天发消息要带令牌和我的名字；进聊天页就拉一次收件箱。
+            // 好友聊天发消息要带令牌和我的名字；进聊天页就拉一次收件箱，轮询改成 3 秒。
             store.serverToken = auth.session?.accessToken
             store.myDisplayName = auth.displayName
+            MessageSyncService.shared.setPollInterval(3)
             Task { await MessageSyncService.shared.pollNow() }
+        }
+        .onDisappear {
+            // 离开聊天页，轮询回到列表页的 5 秒。
+            MessageSyncService.shared.setPollInterval(5)
         }
         .onChange(of: auth.session?.accessToken ?? "") { _, newToken in
             store.serverToken = newToken.isEmpty ? nil : newToken

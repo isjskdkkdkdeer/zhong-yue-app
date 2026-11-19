@@ -130,8 +130,9 @@ final class VoiceRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
 // MARK: - 聊天状态（一个会话一个 ChatStore）
 
 /// 聊天记录存本机（UserDefaults 里按会话存 JSON，最多 300 条，照网页版）。
-/// 好友聊天（第 8 步）：发出去的话先存本机 + 本机翻译，再调云函数 POST /send
-/// 发给对方；对方的消息由 MessageSyncService 每 10 秒调 GET /inbox 拉取，
+/// 好友聊天（第 8 步）：发出去的话先存本机 + 立刻调云函数 POST /send 发原文，
+/// 翻译在另一条任务里并行跑（第 9 步：以前是等翻译完才发，最多拖 12 秒）；
+/// 对方发来的消息由 MessageSyncService 轮询调 GET /inbox 拉取（聊天页 3 秒、列表页 5 秒），
 /// 按 from_num 分到对应会话，收到后调 POST /ack 确认。
 @MainActor
 final class ChatStore: ObservableObject {
@@ -206,45 +207,60 @@ final class ChatStore: ObservableObject {
         save()
     }
 
+    /// 只改某条消息的译文（发消息和翻译并行跑时用：两个任务同时改同一条消息，
+    /// 整条替换会互相盖掉对方改过的字段——比如发消息的任务会把译文盖回“翻译中…”）。
+    private func updateTranslationOnly(id: UUID, trans: String, failed: Bool) {
+        guard let idx = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[idx].trans = trans
+        messages[idx].transFail = failed
+        save()
+    }
+
+    /// 只改某条消息的“未发送”标记（同上，避免盖掉译文）。
+    private func markSendFailed(_ id: UUID, _ failed: Bool) {
+        guard let idx = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[idx].sendFailed = failed
+        save()
+    }
+
     // MARK: 好友聊天（发消息 → 自动翻译成对方语言 → 发给对方）
 
     func sendFriendText(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let lang = detectLanguage(trimmed)
-        var msg = ChatMessage(dir: .me, orig: trimmed, trans: "翻译中…", from: lang)
+        let msg = ChatMessage(dir: .me, orig: trimmed, trans: "翻译中…", from: lang)
         append(msg)
+        // 延迟修（第 9 步）：以前是串行的——先等翻译链跑完（Gemini 5 秒 → 云函数 8 秒 →
+        // 谷歌 4 秒，整链最多 12 秒），翻译完才调 POST /send；对方最晚 12 秒后才能
+        // 收到，再加上接收端 10 秒一轮的轮询，一条消息最慢 20 多秒才出现。
+        // 现在改成并行：先发原文（不带译文，译文空着；对方收到后本机翻译链补译文，
+        // pollNow 里本来就这么处理），翻译在另一条任务里跑，译完只补译文。
+        Task { await self.sendToServer(msg, trans: "") }
         Task {
             do {
                 let trans = try await translator.translate(text: trimmed, from: lang, to: lang.other)
-                msg.trans = trans
-                msg.transFail = false
+                self.updateTranslationOnly(id: msg.id, trans: trans, failed: false)
             } catch {
-                msg.trans = "翻译失败（上面是原话）"
-                msg.transFail = true
+                self.updateTranslationOnly(id: msg.id, trans: "翻译失败（上面是原话）", failed: true)
             }
-            self.update(msg)
-            // 翻译完再发给对方（带原文、译文、语言、时间戳、我的名字；
-            // sess 用该好友会话的固定标识，id 用本条消息的唯一数字 id）。
-            await self.sendToServer(msg)
         }
     }
 
     /// 调云函数 POST /send 把一条消息发给对方。
     /// 成功：标记正常；失败（没网 / 401）：消息留在本机并标“未发送”，不丢消息、不崩。
-    private func sendToServer(_ message: ChatMessage) async {
+    /// trans 参数：发消息时传 ""（先发原文不等翻译）；重发时不传，用消息里已有的译文。
+    private func sendToServer(_ message: ChatMessage, trans: String? = nil) async {
         guard !isBot else { return }
         guard let token = serverToken, !token.isEmpty else {
-            var m = message
-            m.sendFailed = true
-            update(m)
+            markSendFailed(message.id, true)
             return
         }
         let body = WorkerAPI.jsonBody([
             "to": conversationId,
             "orig": message.orig,
             // 翻译失败时发空译文，对方收到后用本机翻译链补译文。
-            "trans": message.transFail ? "" : message.trans,
+            "trans": trans ?? (message.transFail ? "" : message.trans),
             "lang": message.from.rawValue,
             "ts": Int64(message.ts.timeIntervalSince1970 * 1000),
             "name": myDisplayName,
@@ -252,13 +268,8 @@ final class ChatStore: ObservableObject {
             "id": message.msgId,
         ])
         let result = await WorkerAPI.request(path: "send", method: "POST", token: token, body: body, as: SendResponse.self)
-        var m = message
-        if let result, result.status == 200, result.value?.ok == true {
-            m.sendFailed = false
-        } else {
-            m.sendFailed = true
-        }
-        update(m)
+        // 只改 sendFailed 标记，别用整条消息替换（会把并行跑的翻译任务译好的译文盖掉）。
+        markSendFailed(message.id, !(result?.status == 200 && result?.value?.ok == true))
     }
 
     /// “未发送”的消息点一下重发（同一个 msgId，服务器去重，不会重复入库）。

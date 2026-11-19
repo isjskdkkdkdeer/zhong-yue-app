@@ -4,7 +4,7 @@ import AudioToolbox
 /// 消息列表页：顶部固定翻译助手（置顶、不能删、永远在线，头像用 App logo），
 /// 下面是好友列表。点开进聊天页。
 /// 好友和消息走服务器（第 8 步）：好友列表以服务器为准；
-/// 对方发来的消息每 10 秒拉一次（MessageSyncService），按好友号分到对应会话。
+/// 对方发来的消息轮询拉取（MessageSyncService，聊天页 3 秒、列表页 5 秒），按好友号分到对应会话。
 struct MessagesView: View {
     @EnvironmentObject var friendStore: FriendStore
     @ObservedObject private var sync = MessageSyncService.shared
@@ -120,7 +120,8 @@ struct MessagesView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("消息")
             .onAppear {
-                // 进消息页就拉一次收件箱（lastPollAt 变了会刷新列表预览）。
+                // 进消息页就拉一次收件箱（lastPollAt 变了会刷新列表预览）；列表页轮询 5 秒。
+                MessageSyncService.shared.setPollInterval(5)
                 Task { await MessageSyncService.shared.pollNow() }
             }
             .toolbar {
@@ -153,11 +154,12 @@ enum MessagesDestination: Hashable {
     case friend(NativeFriend)
 }
 
-// MARK: - 收消息轮询（第 8 步：好友连接）
+// MARK: - 收消息轮询（第 8 步：好友连接；第 9 步：延迟修）
 //
-// App 在前台时每 10 秒调一次 GET /inbox 拉新消息，按 from_num 分到对应会话，
+// App 在前台时轮询调 GET /inbox 拉新消息，按 from_num 分到对应会话，
 // 收到后调 POST /ack 确认。收到新消息响一下系统提示音（App 打开时就行；
 // 锁屏推送要 APNs，以后再说，不做假的）。
+// 轮询间隔：聊天页 3 秒、消息列表页 5 秒（以前固定 10 秒，消息最晚 10 秒才出现）。
 // 轮询由 MainTabView 在前台时启动、切后台时停止；进消息页和聊天页时也会立刻拉一次。
 
 @MainActor
@@ -171,23 +173,31 @@ final class MessageSyncService: ObservableObject {
 
     private var pollTask: Task<Void, Never>?
     private var isPollingNow = false
-    /// 401（登录过期）后暂停轮询，等下次回到前台再试，不狂刷。
-    private var authPaused = false
+    /// 轮询间隔（秒）：聊天页 3 秒、列表页 5 秒；循环每次按当前值睡，改了立刻生效。
+    private var pollInterval: TimeInterval = 5
+    /// 401（登录过期）后暂停轮询 30 秒再试（以前是无限暂停：令牌后来刷新了，
+    /// App 不切后台轮询就再也不跑了，消息一直收不到）。
+    private var authPausedUntil: Date?
     private var tokenProvider: (() -> String?)?
     private let translator = TranslationService.shared
 
     private init() {}
 
-    /// 开始每 10 秒轮询（只在 App 在前台时调用；切后台就 stop）。
+    /// 换轮询间隔（聊天页进 3 秒、出 5 秒；消息列表页 5 秒）。
+    func setPollInterval(_ interval: TimeInterval) {
+        pollInterval = interval
+    }
+
+    /// 开始轮询（只在 App 在前台时调用；切后台就 stop）。
     /// tokenProvider 每次现取现用（令牌过期时 supabase-swift 会自动刷新）。
     func start(tokenProvider: @escaping () -> String?) {
         self.tokenProvider = tokenProvider
-        authPaused = false
+        authPausedUntil = nil
         stop()
         pollTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 await self.pollNow()
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                try? await Task.sleep(nanoseconds: UInt64(self.pollInterval * 1_000_000_000))
             }
         }
     }
@@ -199,19 +209,24 @@ final class MessageSyncService: ObservableObject {
 
     /// 回到前台时清掉 401 暂停标记，下次轮询再试。
     func clearAuthPause() {
-        authPaused = false
+        authPausedUntil = nil
     }
 
     /// 拉一次收件箱（GET /inbox）：按 from_num 分到对应会话，收到后调 POST /ack。
     /// 没登录、没网、401 都静默失败，不崩。
     func pollNow() async {
-        guard !isPollingNow, !authPaused else { return }
+        guard !isPollingNow else { return }
+        if let until = authPausedUntil {
+            // 401 暂停期过了就自动恢复，不用等切后台。
+            if Date() < until { return }
+            authPausedUntil = nil
+        }
         guard let token = tokenProvider?(), !token.isEmpty else { return }
         isPollingNow = true
         defer { isPollingNow = false }
         guard let result = await WorkerAPI.request(path: "inbox", method: "GET", token: token, as: InboxResponse.self) else { return }
         if result.status == 401 {
-            authPaused = true
+            authPausedUntil = Date().addingTimeInterval(30)
             return
         }
         guard result.status == 200, result.value?.ok == true,
