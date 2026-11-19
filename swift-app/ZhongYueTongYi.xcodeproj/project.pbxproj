@@ -174,7 +174,7 @@
 				91941DC2E92A13DC59584336 /* FriendsView.swift in Sources */,
 				BE319CF99A8FCD1D431A8683 /* CallsView.swift in Sources */,
 				4BE51C5646D408C8673A2B8F /* MeView.swift in Sources */,
-				6B31674D3108648AF7A7096C /* MeDetailViews.swift in Sources */
+				6B31674D3108648AF7A7096C /* MeDetailViews.swift in Sources */,
 				D4D689684F3D4550999B6EF0 /* Translator.swift in Sources */,
 				7EF66C27F4544F9DB8F1D9F3 /* ChatStore.swift in Sources */,
 				66B9D441C5754037B29135AE /* ChatView.swift in Sources */,
