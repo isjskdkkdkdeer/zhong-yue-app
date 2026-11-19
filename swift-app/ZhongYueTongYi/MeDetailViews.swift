@@ -1215,14 +1215,17 @@ struct RingtonePickerView: View {
                         scheduleDismiss(after: 2.0)
                     }
                 }
-                .onDelete(perform: deleteUserSongs)
+                .onDelete { offsets in deleteUserSongs(at: offsets) }
                 Button {
                     showDocPicker = true
                 } label: {
                     Label("从文件里选歌曲", systemImage: "folder")
                 }
-            } footer: {
+            }
+            Section {
                 Text("从文件里选的歌只支持 mp3、m4a、wav，存在本机；左滑可以删。选中的歌以后来电就响它。")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
             }
             if let docPickerError {
                 Section {
