@@ -719,7 +719,11 @@ final class CallManager: ObservableObject {
         case .denied:
             return "麦克风权限没开：去手机设置里打开这个 App 的麦克风权限，才能打电话。"
         case .undetermined:
-            let granted = await AVAudioSession.sharedInstance().requestRecordPermission()
+            let granted = await withCheckedContinuation { cont in
+                AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                    cont.resume(returning: granted)
+                }
+            }
             if !granted { return "没有麦克风权限打不了电话，去手机设置里打开麦克风权限再试。" }
         default:
             break
