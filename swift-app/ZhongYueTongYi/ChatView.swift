@@ -4,6 +4,7 @@ import AVFoundation
 /// 聊天页：气泡里原文 + 翻译上下叠着显示（照网页版样式），带时间；
 /// 底部输入框 + 发送；按住麦克风录音（最长 30 秒）发给助手。
 struct ChatView: View {
+    @EnvironmentObject var auth: AuthViewModel
     @StateObject private var store: ChatStore
     @StateObject private var recorder = VoiceRecorder()
 
@@ -43,6 +44,19 @@ struct ChatView: View {
         }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // 好友聊天发消息要带令牌和我的名字；进聊天页就拉一次收件箱。
+            store.serverToken = auth.session?.accessToken
+            store.myDisplayName = auth.displayName
+            Task { await MessageSyncService.shared.pollNow() }
+        }
+        .onChange(of: auth.session?.accessToken ?? "") { _, newToken in
+            store.serverToken = newToken.isEmpty ? nil : newToken
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .zyInboxUpdated)) { _ in
+            // 收件箱拉到新消息：刷新打开着的聊天页。
+            store.reload()
+        }
         .toolbar {
             if isBot {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -68,7 +82,8 @@ struct ChatView: View {
                             message: message,
                             isBot: isBot,
                             onRetry: { store.retryTranslation(of: message) },
-                            onSpeak: { store.speakMessage(message) }
+                            onSpeak: { store.speakMessage(message) },
+                            onResend: { store.retrySend(of: message) }
                         )
                         .id(message.id)
                     }
@@ -216,6 +231,7 @@ struct MessageBubbleView: View {
     let isBot: Bool
     let onRetry: () -> Void
     let onSpeak: () -> Void
+    let onResend: () -> Void
 
     private var isMe: Bool { message.dir == .me }
 
@@ -254,6 +270,13 @@ struct MessageBubbleView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 4)
+                }
+
+                // 发给对方失败（没网 / 401）：标“未发送”，点一下重发。
+                if message.sendFailed && isMe {
+                    Button("未发送，点一下重发") { onResend() }
+                        .font(.system(size: 13))
+                        .foregroundColor(.red)
                 }
 
                 HStack(spacing: 6) {

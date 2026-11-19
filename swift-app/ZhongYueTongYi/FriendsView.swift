@@ -8,24 +8,35 @@ struct NativeFriend: Codable, Identifiable, Equatable, Hashable {
     var nickname: String
 }
 
-/// 好友列表存在本机（UserDefaults）。
-/// 限制：网页版的好友存在各手机浏览器的 localStorage 里，原生 App 读不到，
-/// 所以这里的好友列表和网页版不互通；好友连接（真实聊天/通话）后续步骤接入。
+/// 好友列表：服务器为准，本机 UserDefaults 做离线缓存。
+/// 打开好友页时调服务器拉取（GET /friends + GET /friend-requests），
+/// 拉成功用服务器列表覆盖缓存；没网或拉失败时显示缓存。
+/// 网页版的好友存在各手机浏览器的 localStorage 里，原生 App 读不到，
+/// 所以这里的好友列表和网页版不互通；原生两台手机之间走服务器互通。
 @MainActor
 final class FriendStore: ObservableObject {
     @Published private(set) var friends: [NativeFriend] = []
+    /// 待处理的好友请求（对方加我，等我接受 / 拒绝）。
+    @Published private(set) var pendingRequests: [FriendRequest] = []
+    @Published private(set) var isSyncingFriends = false
+
+    /// 备注名：只存本机（UserDefaults），显示时备注优先。
+    private var remarks: [String: String] = [:]
+
     private let storageKey = "zy-native-friends"
+    private let remarksKey = "zy-friend-remarks"
 
     init() { load() }
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let decoded = try? JSONDecoder().decode([NativeFriend].self, from: data)
-        else {
-            friends = []
-            return
+        if let data = UserDefaults.standard.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode([NativeFriend].self, from: data) {
+            friends = decoded
         }
-        friends = decoded
+        if let data = UserDefaults.standard.data(forKey: remarksKey),
+           let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
+            remarks = decoded
+        }
     }
 
     private func save() {
@@ -34,7 +45,142 @@ final class FriendStore: ObservableObject {
         }
     }
 
+    private func saveRemarks() {
+        if let data = try? JSONEncoder().encode(remarks) {
+            UserDefaults.standard.set(data, forKey: remarksKey)
+        }
+    }
+
+    /// 显示用的名字：备注优先，没有备注就用“好友 + 好友号”。
+    /// 服务器只给好友号、查不到对方昵称，所以默认显示号码。
+    func displayName(for friend: NativeFriend) -> String {
+        if let remark = remarks[friend.id], !remark.isEmpty { return remark }
+        return friend.nickname
+    }
+
+    /// 改备注名（只存本机）。传空字符串就是清除备注。
+    func setRemark(_ remark: String, for number: String) {
+        let trimmed = remark.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            remarks.removeValue(forKey: number)
+        } else {
+            remarks[number] = trimmed
+        }
+        saveRemarks()
+        objectWillChange.send()
+    }
+
+    /// 服务器好友同步：GET /friends（服务器为准，覆盖本机缓存）+
+    /// GET /friend-requests（待处理请求）。没令牌或拉失败就静默用缓存。
+    func sync(token: String?) async {
+        guard let token, !token.isEmpty else { return }
+        isSyncingFriends = true
+        defer { isSyncingFriends = false }
+        if let result = await WorkerAPI.request(path: "friends", method: "GET", token: token, as: FriendsListResponse.self),
+           result.status == 200, result.value?.ok == true,
+           let list = result.value?.friends {
+            friends = list.compactMap { item -> NativeFriend? in
+                guard item.friend_num.count == 6 else { return nil }
+                return NativeFriend(id: item.friend_num, nickname: "好友 \(item.friend_num)")
+            }
+            save()
+        }
+        if let result = await WorkerAPI.request(path: "friend-requests", method: "GET", token: token, as: FriendRequestsResponse.self),
+           result.status == 200, result.value?.ok == true,
+           let list = result.value?.requests {
+            pendingRequests = list.compactMap { item -> FriendRequest? in
+                guard item.from_num.count == 6 else { return nil }
+                let ms = item.created_at ?? 0
+                return FriendRequest(fromNum: item.from_num, createdAt: Date(timeIntervalSince1970: TimeInterval(ms) / 1000))
+            }
+        }
+    }
+
+    /// 加好友（走服务器 POST /friend-add）。成功按 status 区分；
+    /// 失败返回中文原因。friends / already_friends 时把对方写进本机列表，
+    /// requested 时只发请求、不进列表（等对方接受后同步时才出现）。
+    func addFriend(number: String, token: String?) async -> FriendAddOutcome {
+        guard let token, !token.isEmpty else { return .failed("还没登录，请先登录再加好友") }
+        guard let result = await WorkerAPI.request(
+            path: "friend-add", method: "POST", token: token,
+            body: WorkerAPI.jsonBody(["to_num": number]), as: FriendAddResponse.self
+        ) else {
+            return .failed("网络有问题，好友请求没发出去，请检查网络再试")
+        }
+        if result.status == 401 { return .failed("登录已过期，请重新登录再试") }
+        guard result.status == 200, result.value?.ok == true,
+              let status = result.value?.status else {
+            switch result.value?.error {
+            case "cannot add self": return .failed("不能加自己为好友")
+            case "bad input": return .failed("好友号不对，请检查 6 位数字")
+            case let e?: return .failed("添加失败（\(e)），请稍后再试")
+            default: return .failed("添加失败，请检查网络再试")
+            }
+        }
+        switch status {
+        case "friends":
+            upsertLocal(number: number)
+            return .added(.friends)
+        case "already_friends":
+            upsertLocal(number: number)
+            return .added(.alreadyFriends)
+        case "requested":
+            return .added(.requested)
+        default:
+            return .failed("添加失败，请稍后再试")
+        }
+    }
+
+    /// 接受好友请求：双方互加好友，请求从待处理里去掉。
+    func acceptRequest(_ request: FriendRequest, token: String?) async -> Bool {
+        guard let token, !token.isEmpty else { return false }
+        guard let result = await WorkerAPI.request(
+            path: "friend-accept", method: "POST", token: token,
+            body: WorkerAPI.jsonBody(["from_num": request.fromNum]), as: WorkerOK.self
+        ), result.status == 200, result.value?.ok == true else { return false }
+        upsertLocal(number: request.fromNum)
+        pendingRequests.removeAll { $0.fromNum == request.fromNum }
+        return true
+    }
+
+    /// 拒绝好友请求。
+    func rejectRequest(_ request: FriendRequest, token: String?) async -> Bool {
+        guard let token, !token.isEmpty else { return false }
+        guard let result = await WorkerAPI.request(
+            path: "friend-reject", method: "POST", token: token,
+            body: WorkerAPI.jsonBody(["from_num": request.fromNum]), as: WorkerOK.self
+        ), result.status == 200, result.value?.ok == true else { return false }
+        pendingRequests.removeAll { $0.fromNum == request.fromNum }
+        return true
+    }
+
+    /// 删好友（只删我这边）：先从本机列表去掉，再调服务器；
+    /// 服务器失败就把人放回列表并返回失败原因，下次同步以服务器为准。
+    func deleteFriend(_ friend: NativeFriend, token: String?) async -> String? {
+        guard let idx = friends.firstIndex(of: friend) else { return nil }
+        friends.remove(at: idx)
+        save()
+        guard let token, !token.isEmpty else { return nil }
+        guard let result = await WorkerAPI.request(
+            path: "friend-remove", method: "POST", token: token,
+            body: WorkerAPI.jsonBody(["friend_num": friend.id]), as: WorkerOK.self
+        ), result.status == 200, result.value?.ok == true else {
+            friends.insert(friend, at: min(idx, friends.count))
+            save()
+            return "删除失败，请检查网络再试"
+        }
+        return nil
+    }
+
+    /// 本机列表里加一个好友（服务器同步 / 接受请求后用；已在列表里就不重复加）。
+    func upsertLocal(number: String) {
+        guard !friends.contains(where: { $0.id == number }) else { return }
+        friends.append(NativeFriend(id: number, nickname: "好友 \(number)"))
+        save()
+    }
+
     /// 添加好友（本机列表）。6 位数字、未重复才成功。
+    /// 注意：现在加好友走服务器（addFriend），这个只留给本地兜底。
     @discardableResult
     func add(number: String) -> Bool {
         guard number.count == 6,
@@ -45,66 +191,92 @@ final class FriendStore: ObservableObject {
         save()
         return true
     }
-
-    func remove(at offsets: IndexSet) {
-        friends.remove(atOffsets: offsets)
-        save()
-    }
 }
 
 struct FriendsView: View {
     /// 好友列表由 MainTabView 统一持有，和消息列表共用同一份数据。
     @EnvironmentObject var store: FriendStore
+    @EnvironmentObject var auth: AuthViewModel
     @State private var showAddFriend = false
     @State private var showScanner = false
+    @State private var remarkFriend: NativeFriend?
+    @State private var remarkText = ""
+    @State private var deleteError: String?
 
     var body: some View {
         NavigationStack {
-            Group {
-                if store.friends.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "person.2.fill")
-                            .font(.system(size: 56))
-                            .foregroundColor(.secondary)
-                        Text("还没有好友")
-                            .font(.headline)
-                        Text("好友列表暂存于本机，与网页版不互通。")
+            List {
+                // 新的朋友：有待处理请求时显示红色数字角标。
+                Section {
+                    NavigationLink {
+                        FriendRequestsView(store: store)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.badge.plus")
+                                .foregroundColor(Color(red: 0, green: 0.48, blue: 1))
+                                .frame(width: 28)
+                            Text("新的朋友")
+                            Spacer()
+                            if !store.pendingRequests.isEmpty {
+                                Text("\(store.pendingRequests.count)")
+                                    .font(.footnote)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 2)
+                                    .background(Color.red)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+                }
+
+                Section {
+                    if store.friends.isEmpty {
+                        Text("还没有好友，点右上角 + 输入对方 6 位好友号添加。")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Button("添加好友") { showAddFriend = true }
-                            .buttonStyle(.borderedProminent)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemGroupedBackground))
-                } else {
-                    List {
-                        Section {
-                            ForEach(store.friends) { friend in
-                                NavigationLink {
-                                    ChatView(conversationId: friend.id, isBot: false, title: friend.nickname)
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        ZStack {
-                                            Circle().fill(Color(.systemGray5))
-                                            Text(String(friend.nickname.prefix(1)))
-                                                .font(.headline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        .frame(width: 44, height: 44)
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(friend.nickname)
-                                            Text("好友号 \(friend.id)")
-                                                .font(.footnote)
-                                                .foregroundColor(.secondary)
-                                        }
+                    } else {
+                        ForEach(store.friends) { friend in
+                            NavigationLink {
+                                ChatView(conversationId: friend.id, isBot: false, title: store.displayName(for: friend))
+                            } label: {
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        Circle().fill(Color(.systemGray5))
+                                        Text(String(store.displayName(for: friend).prefix(1)))
+                                            .font(.headline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(width: 44, height: 44)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(store.displayName(for: friend))
+                                        Text("好友号 \(friend.id)")
+                                            .font(.footnote)
+                                            .foregroundColor(.secondary)
                                     }
                                 }
                             }
-                            .onDelete(perform: store.remove)
-                        } footer: {
-                            Text("好友列表暂存于本机，与网页版不互通。")
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Task {
+                                        if let err = await store.deleteFriend(friend, token: auth.session?.accessToken) {
+                                            deleteError = err
+                                        }
+                                    }
+                                } label: {
+                                    Label("删除", systemImage: "trash")
+                                }
+                            }
+                            .contextMenu {
+                                Button("改备注名") {
+                                    remarkText = store.displayName(for: friend)
+                                    remarkFriend = friend
+                                }
+                            }
                         }
                     }
+                } footer: {
+                    Text("好友列表以服务器为准，没网时显示本机缓存；和网页版不互通，原生两台手机之间互通。")
                 }
             }
             .navigationTitle("好友")
@@ -127,13 +299,119 @@ struct FriendsView: View {
                     }
                 }
             }
+            .task {
+                // 打开好友页就同步一次服务器好友列表和待处理请求。
+                await store.sync(token: auth.session?.accessToken)
+            }
+            .refreshable {
+                await store.sync(token: auth.session?.accessToken)
+            }
             .sheet(isPresented: $showAddFriend) {
                 AddFriendView(store: store)
             }
             .fullScreenCover(isPresented: $showScanner) {
                 QRScannerView(store: store)
             }
+            .alert("改备注名", isPresented: Binding(
+                get: { remarkFriend != nil },
+                set: { if !$0 { remarkFriend = nil } }
+            )) {
+                TextField("备注名", text: $remarkText)
+                Button("保存") {
+                    if let friend = remarkFriend {
+                        store.setRemark(remarkText, for: friend.id)
+                    }
+                    remarkFriend = nil
+                }
+                Button("取消", role: .cancel) { remarkFriend = nil }
+            }
+            .alert(deleteError ?? "", isPresented: Binding(
+                get: { deleteError != nil },
+                set: { if !$0 { deleteError = nil } }
+            )) {
+                Button("确定") {}
+            }
         }
+    }
+}
+
+/// 新的朋友：待处理的好友请求列表（GET /friend-requests）。
+/// 每条显示对方好友号和时间，接受 / 拒绝后刷新列表。
+struct FriendRequestsView: View {
+    @ObservedObject var store: FriendStore
+    @EnvironmentObject var auth: AuthViewModel
+    @State private var busyNumber: String?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        List {
+            if store.pendingRequests.isEmpty {
+                Text("没有新的好友请求")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                ForEach(store.pendingRequests) { request in
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle().fill(Color(.systemGray5))
+                            Text(String(request.fromNum.prefix(1)))
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(width: 44, height: 44)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("好友号 \(request.fromNum)")
+                            Text(requestTimeString(request.createdAt))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if busyNumber == request.fromNum {
+                            ProgressView()
+                        } else {
+                            Button("接受") {
+                                Task { await act(request, accept: true) }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(busyNumber != nil)
+                            Button("拒绝") {
+                                Task { await act(request, accept: false) }
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(busyNumber != nil)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("新的朋友")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await store.sync(token: auth.session?.accessToken)
+        }
+        .alert(errorMessage ?? "", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("确定") {}
+        }
+    }
+
+    private func act(_ request: FriendRequest, accept: Bool) async {
+        busyNumber = request.fromNum
+        let ok = accept
+            ? await store.acceptRequest(request, token: auth.session?.accessToken)
+            : await store.rejectRequest(request, token: auth.session?.accessToken)
+        busyNumber = nil
+        if !ok {
+            errorMessage = "操作失败，请检查网络再试"
+        }
+    }
+
+    private func requestTimeString(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MM-dd HH:mm"
+        return fmt.string(from: date)
     }
 }
 
@@ -162,7 +440,7 @@ struct AddFriendView: View {
                             number = String(filtered.prefix(6))
                         }
                 } footer: {
-                    Text("本次仅保存到本机列表，好友连接后续步骤接入。")
+                    Text("发给对方一条好友请求，对方接受后双方互为好友。")
                 }
                 Section {
                     Button(action: submit) {
@@ -196,7 +474,8 @@ struct AddFriendView: View {
         }
     }
 
-    /// 点确认：先收键盘，再按顺序校验——格式、自己、重复，最后才保存。
+    /// 点确认：先收键盘，再按顺序校验——格式、自己、重复，
+    /// 最后走服务器发好友请求（POST /friend-add）。
     /// 每种结果都弹框说清楚，不再静默。
     private func submit() {
         numberFocused = false
@@ -216,12 +495,21 @@ struct AddFriendView: View {
             alertIsSuccess = false
             return
         }
-        if store.add(number: num) {
-            alertMessage = "已添加好友号 \(num)"
-            alertIsSuccess = true
-        } else {
-            alertMessage = "添加失败，请再试一次"
-            alertIsSuccess = false
+        Task {
+            switch await store.addFriend(number: num, token: auth.session?.accessToken) {
+            case .added(.friends):
+                alertMessage = "已添加好友号 \(num)"
+                alertIsSuccess = true
+            case .added(.alreadyFriends):
+                alertMessage = "已经是好友了"
+                alertIsSuccess = true
+            case .added(.requested):
+                alertMessage = "好友请求已发送，等对方接受"
+                alertIsSuccess = true
+            case .failed(let reason):
+                alertMessage = reason
+                alertIsSuccess = false
+            }
         }
     }
 }
@@ -351,7 +639,7 @@ struct CameraPreviewView: UIViewRepresentable {
 }
 
 /// 扫一扫页面：全屏相机 + 中间扫码框 + 取消 / 手电筒。
-/// 扫到码就停下来解析：是好友号就加到本地好友列表，不是就提示“这不是好友二维码”。
+/// 扫到码就停下来解析：是好友号就走服务器发好友请求，不是就提示“这不是好友二维码”。
 struct QRScannerView: View {
     @ObservedObject var store: FriendStore
     @EnvironmentObject var auth: AuthViewModel
@@ -483,12 +771,24 @@ struct QRScannerView: View {
         } else if number == auth.friendNumber {
             resultMessage = "不能加自己为好友"
             closeAfterResult = true
-        } else if store.add(number: number) {
-            resultMessage = "已添加好友号 \(number)"
-            closeAfterResult = true
         } else {
-            resultMessage = "这不是好友二维码"
-            closeAfterResult = false
+            // 走服务器发好友请求（POST /friend-add）。
+            Task {
+                switch await store.addFriend(number: number, token: auth.session?.accessToken) {
+                case .added(.friends):
+                    resultMessage = "已添加好友号 \(number)"
+                    closeAfterResult = true
+                case .added(.alreadyFriends):
+                    resultMessage = "已经是好友了"
+                    closeAfterResult = true
+                case .added(.requested):
+                    resultMessage = "好友请求已发送，等对方接受"
+                    closeAfterResult = true
+                case .failed(let reason):
+                    resultMessage = reason
+                    closeAfterResult = false
+                }
+            }
         }
     }
 }

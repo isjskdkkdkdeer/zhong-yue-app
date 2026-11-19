@@ -10,6 +10,14 @@ struct ChatMessage: Codable, Identifiable, Equatable {
     }
 
     var id: UUID
+    /// 发给服务器用的数字消息 id（POST /send 的 id 字段）。
+    /// 云函数对 (to_num, sess, msg_id) 去重：同一条消息重复发不会在对方那边重复入库，
+    /// 所以这个 id 生成一次就跟着消息存下来，重发也用同一个。
+    /// 注意：这两个新字段写在属性声明里带默认值，旧版本存下来的消息没有这两个键，
+    /// 解码时会自动用默认值补上，不会丢旧记录。
+    var msgId: Int64 = Int64.random(in: 1...Int64.max)
+    /// 发给对方失败（没网 / 401）时标 true，聊天页显示“未发送，点一下重发”。
+    var sendFailed: Bool = false
     var dir: Direction
     var orig: String
     var trans: String
@@ -18,9 +26,12 @@ struct ChatMessage: Codable, Identifiable, Equatable {
     var ts: Date
     var isVoice: Bool
 
-    init(id: UUID = UUID(), dir: Direction, orig: String, trans: String = "",
+    init(id: UUID = UUID(), msgId: Int64 = Int64.random(in: 1...Int64.max), sendFailed: Bool = false,
+         dir: Direction, orig: String, trans: String = "",
          transFail: Bool = false, from: ChatLanguage, ts: Date = Date(), isVoice: Bool = false) {
         self.id = id
+        self.msgId = msgId
+        self.sendFailed = sendFailed
         self.dir = dir
         self.orig = orig
         self.trans = trans
@@ -119,8 +130,9 @@ final class VoiceRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
 // MARK: - 聊天状态（一个会话一个 ChatStore）
 
 /// 聊天记录存本机（UserDefaults 里按会话存 JSON，最多 300 条，照网页版）。
-/// 好友聊天目前是本机自言自语式翻译演示：发出去的话自动翻译成对方语言显示；
-/// 真正的端到端消息收发要等好友连接（Supabase / WebSocket）那一步。
+/// 好友聊天（第 8 步）：发出去的话先存本机 + 本机翻译，再调云函数 POST /send
+/// 发给对方；对方的消息由 MessageSyncService 每 10 秒调 GET /inbox 拉取，
+/// 按 from_num 分到对应会话，收到后调 POST /ack 确认。
 @MainActor
 final class ChatStore: ObservableObject {
     let conversationId: String
@@ -129,6 +141,10 @@ final class ChatStore: ObservableObject {
 
     @Published private(set) var messages: [ChatMessage] = []
     @Published var voiceError: String?
+
+    /// 发好友消息用的服务器令牌和我的名字（ChatView 打开聊天页时填进来；助手聊天不用）。
+    var serverToken: String?
+    var myDisplayName: String = ""
 
     private let storageKey: String
     private let workerBase = URL(string: "https://zhong-yue-offline.jameswilson199079.workers.dev")!
@@ -190,7 +206,7 @@ final class ChatStore: ObservableObject {
         save()
     }
 
-    // MARK: 好友聊天（发消息 → 自动翻译成对方语言）
+    // MARK: 好友聊天（发消息 → 自动翻译成对方语言 → 发给对方）
 
     func sendFriendText(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -208,6 +224,97 @@ final class ChatStore: ObservableObject {
                 msg.transFail = true
             }
             self.update(msg)
+            // 翻译完再发给对方（带原文、译文、语言、时间戳、我的名字；
+            // sess 用该好友会话的固定标识，id 用本条消息的唯一数字 id）。
+            await self.sendToServer(msg)
+        }
+    }
+
+    /// 调云函数 POST /send 把一条消息发给对方。
+    /// 成功：标记正常；失败（没网 / 401）：消息留在本机并标“未发送”，不丢消息、不崩。
+    private func sendToServer(_ message: ChatMessage) async {
+        guard !isBot else { return }
+        guard let token = serverToken, !token.isEmpty else {
+            var m = message
+            m.sendFailed = true
+            update(m)
+            return
+        }
+        let body = WorkerAPI.jsonBody([
+            "to": conversationId,
+            "orig": message.orig,
+            // 翻译失败时发空译文，对方收到后用本机翻译链补译文。
+            "trans": message.transFail ? "" : message.trans,
+            "lang": message.from.rawValue,
+            "ts": Int64(message.ts.timeIntervalSince1970 * 1000),
+            "name": myDisplayName,
+            "sess": conversationId,
+            "id": message.msgId,
+        ])
+        let result = await WorkerAPI.request(path: "send", method: "POST", token: token, body: body, as: SendResponse.self)
+        var m = message
+        if let result, result.status == 200, result.value?.ok == true {
+            m.sendFailed = false
+        } else {
+            m.sendFailed = true
+        }
+        update(m)
+    }
+
+    /// “未发送”的消息点一下重发（同一个 msgId，服务器去重，不会重复入库）。
+    func retrySend(of message: ChatMessage) {
+        guard message.dir == .me, !isBot else { return }
+        var m = message
+        m.sendFailed = false
+        update(m)
+        Task { await self.sendToServer(m) }
+    }
+
+    /// 从本机存储重新读一次消息（收件箱拉到新消息时刷新打开着的聊天页）。
+    func reload() {
+        load()
+    }
+
+    /// 读某会话的全部本机消息（列表页预览和收件箱去重用）。
+    static func loadMessages(for conversationId: String) -> [ChatMessage] {
+        guard let data = UserDefaults.standard.data(forKey: "zy-chat-\(conversationId)"),
+              let decoded = try? JSONDecoder().decode([ChatMessage].self, from: data)
+        else { return [] }
+        return decoded
+    }
+
+    /// 收到的服务器消息存进对应会话。返回存下来的那条消息的数字 id，
+    /// 同一条（同一个 msgId）已存过就返回 nil、不重复存。
+    /// 服务器没给 msgId（0）时按原文 + 时间去重，存的时候补一个随机 id。
+    @discardableResult
+    static func appendIncoming(_ incoming: IncomingMessage) -> Int64? {
+        var list = loadMessages(for: incoming.fromNum)
+        if incoming.msgId != 0 {
+            if list.contains(where: { $0.msgId == incoming.msgId }) { return nil }
+        } else if list.contains(where: { $0.orig == incoming.orig && $0.ts == incoming.ts && $0.dir == .peer }) {
+            return nil
+        }
+        let msgId = incoming.msgId != 0 ? incoming.msgId : Int64.random(in: 1...Int64.max)
+        let msg = ChatMessage(
+            msgId: msgId, dir: .peer, orig: incoming.orig, trans: incoming.trans,
+            from: incoming.fromLang, ts: incoming.ts
+        )
+        list.append(msg)
+        if list.count > 300 { list = Array(list.suffix(300)) }
+        if let data = try? JSONEncoder().encode(list) {
+            UserDefaults.standard.set(data, forKey: "zy-chat-\(incoming.fromNum)")
+        }
+        return msgId
+    }
+
+    /// 收到的消息本机补译完后，把译文写回本机记录（按数字 id 找那条消息）。
+    static func updateTranslation(for conversationId: String, msgId: Int64, trans: String) {
+        var list = loadMessages(for: conversationId)
+        guard let idx = list.firstIndex(where: { $0.msgId == msgId }) else { return }
+        list[idx].trans = trans
+        list[idx].transFail = false
+        if let data = try? JSONEncoder().encode(list) {
+            UserDefaults.standard.set(data, forKey: "zy-chat-\(conversationId)")
         }
     }
 
@@ -385,4 +492,137 @@ final class ChatStore: ObservableObject {
 enum ChatError: Error {
     case noHistory
     case emptyReply
+}
+
+// MARK: - 云函数接口（第 8 步：好友连接 + 真消息收发）
+//
+// 云函数地址：https://zhong-yue-offline.jameswilson199079.workers.dev
+// 所有接口都带请求头 Authorization: Bearer <Supabase 登录令牌>。
+// 没令牌或网络错返回 nil（调用方静默失败，不崩、不狂刷）。
+// 返回值用 Codable 结构体解析（不用 [String: Any]，Swift 6 严格并发下更稳）。
+// 请求体先在调用方编成 Data 再传进来，[String: Any] 本身不跨并发边界。
+
+enum WorkerAPI {
+    static let base = URL(string: "https://zhong-yue-offline.jameswilson199079.workers.dev")!
+
+    /// 把请求体字典编成 JSON Data（同步编，调用方现编现传）。
+    static func jsonBody(_ dict: [String: Any]) -> Data? {
+        try? JSONSerialization.data(withJSONObject: dict)
+    }
+
+    /// 通用请求。返回 nil = 没令牌 / 网络错；否则返回 HTTP 状态码 + 解析出的数据
+    /// （解析失败时 value 为 nil，调用方按状态码和 ok 字段判断）。
+    static func request<T: Decodable & Sendable>(
+        path: String, method: String, token: String?,
+        body: Data? = nil, as type: T.Type
+    ) async -> (status: Int, value: T?)? {
+        guard let token, !token.isEmpty else { return nil }
+        var req = URLRequest(url: base.appendingPathComponent(path))
+        req.httpMethod = method
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.httpBody = body
+        req.timeoutInterval = 10
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            let value = try? JSONDecoder().decode(T.self, from: data)
+            return (status, value)
+        } catch {
+            return nil
+        }
+    }
+}
+
+/// 通用返回：{ok, error?}（/friend-accept、/friend-reject、/friend-remove、/ack）。
+struct WorkerOK: Decodable, Sendable {
+    let ok: Bool?
+    let error: String?
+}
+
+/// POST /friend-add 返回：{ok, status: friends|requested|already_friends, error?}。
+struct FriendAddResponse: Decodable, Sendable {
+    let ok: Bool?
+    let status: String?
+    let error: String?
+}
+
+/// GET /friends 返回：{ok, friends: [{friend_num, created_at}]}。
+struct FriendsListResponse: Decodable, Sendable {
+    let ok: Bool?
+    let friends: [ServerFriend]?
+}
+
+struct ServerFriend: Decodable, Sendable {
+    let friend_num: String
+    let created_at: Int?
+}
+
+/// GET /friend-requests 返回：{ok, requests: [{from_num, created_at}]}。
+struct FriendRequestsResponse: Decodable, Sendable {
+    let ok: Bool?
+    let requests: [ServerFriendRequest]?
+}
+
+struct ServerFriendRequest: Decodable, Sendable {
+    let from_num: String
+    let created_at: Int?
+}
+
+/// POST /send 返回：{ok, stored}。
+struct SendResponse: Decodable, Sendable {
+    let ok: Bool?
+    let stored: Int?
+    let error: String?
+}
+
+/// GET /inbox 返回：{ok, messages: [...]}。
+struct InboxResponse: Decodable, Sendable {
+    let ok: Bool?
+    let messages: [ServerInboxMessage]?
+}
+
+struct ServerInboxMessage: Decodable, Sendable {
+    let id: Int?
+    let from_num: String?
+    let orig: String?
+    let trans: String?
+    let from_lang: String?
+    let ts: Int?
+    let name: String?
+    let sess: String?
+    let msg_id: Int?
+}
+
+/// 待处理的好友请求（本机模型，时间是 Date）。
+struct FriendRequest: Identifiable, Equatable {
+    var id: String { fromNum }
+    var fromNum: String
+    var createdAt: Date
+}
+
+/// POST /friend-add 的三种成功结果。
+enum FriendAddStatus {
+    case friends        // 对方之前已加过我，现在直接互为好友
+    case requested      // 请求已发出，等对方接受
+    case alreadyFriends // 已经是好友
+}
+
+/// 加好友的结果：成功（带状态）或失败（带中文原因）。
+enum FriendAddOutcome {
+    case added(FriendAddStatus)
+    case failed(String)
+}
+
+/// 从服务器收到的消息（/inbox 的一条），按 from_num 分到对应会话。
+struct IncomingMessage {
+    var rowId: Int
+    var fromNum: String
+    var orig: String
+    var trans: String
+    var fromLang: ChatLanguage
+    var ts: Date
+    var name: String
+    var sess: String
+    var msgId: Int64
 }
