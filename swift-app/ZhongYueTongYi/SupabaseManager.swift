@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Supabase
 
 /// Supabase 连接配置。anon key 是公开的客户端 key，可以直接嵌进 App。
@@ -30,6 +31,11 @@ final class AuthViewModel: ObservableObject {
     /// 本机资料：头像（Assets 资源名）、性别。按邮箱分开存，和网页版同款 key。
     @Published var avatarAssetName = "AvatarImage"
     @Published var gender = "male"
+
+    /// 从相册自选的头像 / 封面背景（UIImage）。有它时优先显示，预设头像只作后备。
+    /// 照片存本机 Documents 里，同样按邮箱分开存。
+    @Published var customAvatarImage: UIImage?
+    @Published var customCoverImage: UIImage?
 
     private let client = SupabaseManager.shared.client
 
@@ -89,6 +95,76 @@ final class AuthViewModel: ObservableObject {
         "zhyuetong-gender-" + email
     }
 
+    private func avatarPhotoFlagKey(for email: String) -> String {
+        "zhyuetong-avatar-photo-" + email
+    }
+
+    private func coverPhotoFlagKey(for email: String) -> String {
+        "zhyuetong-cover-photo-" + email
+    }
+
+    private func fileNameSafe(_ email: String) -> String {
+        email.map { $0.isLetter || $0.isNumber ? String($0) : "_" }.joined()
+    }
+
+    private func photoFileURL(kind: String, email: String) -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("zy-\(kind)-\(fileNameSafe(email)).jpg")
+    }
+
+    private static func downscaledJPEG(_ image: UIImage, maxDimension: CGFloat) -> Data? {
+        let size = image.size
+        let longest = max(size.width, size.height)
+        let scale = longest > maxDimension ? maxDimension / longest : 1
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let resized = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+        return resized.jpegData(compressionQuality: 0.85)
+    }
+
+    /// 从相册选一张做头像：立刻生效（写文件 + 记标记 + 刷新界面）。
+    /// 换性别只影响预设头像，不会覆盖这张照片。
+    func setCustomAvatar(_ image: UIImage) {
+        let email = self.email
+        guard !email.isEmpty else { return }
+        guard let data = Self.downscaledJPEG(image, maxDimension: 512) else { return }
+        try? data.write(to: photoFileURL(kind: "avatar", email: email), options: .atomic)
+        UserDefaults.standard.set("1", forKey: avatarPhotoFlagKey(for: email))
+        customAvatarImage = image
+    }
+
+    /// 恢复用预设头像：删掉相册选的照片。
+    func clearCustomAvatar() {
+        let email = self.email
+        if !email.isEmpty {
+            try? FileManager.default.removeItem(at: photoFileURL(kind: "avatar", email: email))
+            UserDefaults.standard.removeObject(forKey: avatarPhotoFlagKey(for: email))
+        }
+        customAvatarImage = nil
+    }
+
+    /// 从相册选一张做封面背景：立刻生效。
+    func setCustomCover(_ image: UIImage) {
+        let email = self.email
+        guard !email.isEmpty else { return }
+        guard let data = Self.downscaledJPEG(image, maxDimension: 1600) else { return }
+        try? data.write(to: photoFileURL(kind: "cover", email: email), options: .atomic)
+        UserDefaults.standard.set("1", forKey: coverPhotoFlagKey(for: email))
+        customCoverImage = image
+    }
+
+    /// 恢复默认封面背景：删掉相册选的背景图。
+    func clearCustomCover() {
+        let email = self.email
+        if !email.isEmpty {
+            try? FileManager.default.removeItem(at: photoFileURL(kind: "cover", email: email))
+            UserDefaults.standard.removeObject(forKey: coverPhotoFlagKey(for: email))
+        }
+        customCoverImage = nil
+    }
+
     /// 登录后（或会话恢复后）读出本机存的头像和性别。
     func loadLocalProfile() {
         let email = self.email
@@ -97,6 +173,20 @@ final class AuthViewModel: ObservableObject {
         let savedGender = UserDefaults.standard.string(forKey: genderKey(for: email)) ?? ""
         avatarAssetName = Self.avatarAssetNames.contains(savedAvatar) ? savedAvatar : "AvatarImage"
         gender = (savedGender == "female" || savedGender == "male") ? savedGender : "male"
+        if UserDefaults.standard.string(forKey: avatarPhotoFlagKey(for: email)) == "1",
+           let data = try? Data(contentsOf: photoFileURL(kind: "avatar", email: email)),
+           let image = UIImage(data: data) {
+            customAvatarImage = image
+        } else {
+            customAvatarImage = nil
+        }
+        if UserDefaults.standard.string(forKey: coverPhotoFlagKey(for: email)) == "1",
+           let data = try? Data(contentsOf: photoFileURL(kind: "cover", email: email)),
+           let image = UIImage(data: data) {
+            customCoverImage = image
+        } else {
+            customCoverImage = nil
+        }
     }
 
     func saveLocalProfile() {
@@ -104,6 +194,17 @@ final class AuthViewModel: ObservableObject {
         guard !email.isEmpty else { return }
         UserDefaults.standard.set(avatarAssetName, forKey: avatarKey(for: email))
         UserDefaults.standard.set(gender, forKey: genderKey(for: email))
+        // 相册照片的标记以内存状态为准（set/clear 里已写过，这里再对齐一次）。
+        if customAvatarImage != nil {
+            UserDefaults.standard.set("1", forKey: avatarPhotoFlagKey(for: email))
+        } else {
+            UserDefaults.standard.removeObject(forKey: avatarPhotoFlagKey(for: email))
+        }
+        if customCoverImage != nil {
+            UserDefaults.standard.set("1", forKey: coverPhotoFlagKey(for: email))
+        } else {
+            UserDefaults.standard.removeObject(forKey: coverPhotoFlagKey(for: email))
+        }
     }
 
     /// 全部头像资源名。男：默认头像 + m1 + m2；女：f1 + f2（和网页版一致）。

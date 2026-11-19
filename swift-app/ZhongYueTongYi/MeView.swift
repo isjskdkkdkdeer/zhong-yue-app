@@ -13,6 +13,7 @@ struct MeView: View {
     @AppStorage("zy-speak-lang") private var speakLang = "zh"
     @State private var path: [MeDestination] = []
     @State private var showLogoutConfirm = false
+    @State private var showCoverPicker = false
     @State private var copied = false
 
     private var uiLangName: String { uiLang == "vi" ? "Tiếng Việt" : "简体中文" }
@@ -82,6 +83,12 @@ struct MeView: View {
                 }
                 Button("取消", role: .cancel) { }
             }
+            // 封面右上角的“换背景”：从相册选一张，选完立刻生效。
+            .sheet(isPresented: $showCoverPicker) {
+                PhotoPicker { image in
+                    auth.setCustomCover(image)
+                }
+            }
         }
     }
 
@@ -89,12 +96,26 @@ struct MeView: View {
 
     private var coverHeader: some View {
         ZStack {
-            Image(auth.avatarAssetName)
-                .resizable()
-                .scaledToFill()
-                .frame(height: 280)
-                .frame(maxWidth: .infinity)
-                .clipped()
+            // 封面背景：相册自选的背景优先，没有就用当前头像（相册照片或预设图），
+            // 再没有就用默认图。深色渐变遮罩不变，保证昵称和好友号的字看得清。
+            Group {
+                if let cover = auth.customCoverImage {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                } else if let photo = auth.customAvatarImage {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image(auth.avatarAssetName)
+                        .resizable()
+                        .scaledToFill()
+                }
+            }
+            .frame(height: 280)
+            .frame(maxWidth: .infinity)
+            .clipped()
             LinearGradient(
                 colors: [.black.opacity(0.15), .black.opacity(0.65)],
                 startPoint: .top,
@@ -104,6 +125,7 @@ struct MeView: View {
                 HStack {
                     Spacer()
                     HStack(spacing: 12) {
+                        coverCircleButton(icon: "photo") { showCoverPicker = true }
                         coverCircleButton(icon: "qrcode.viewfinder") { path.append(.refer) }
                         coverCircleButton(icon: "gearshape") { path.append(.profile) }
                     }
@@ -111,11 +133,7 @@ struct MeView: View {
                 Spacer()
                 // 整行点按进个人资料；复制按钮是独立的 Button，不再套在链接里。
                 HStack(spacing: 14) {
-                    Image(auth.avatarAssetName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 76, height: 76)
-                        .clipShape(Circle())
+                    UserAvatarImage(size: 76)
                         .overlay(Circle().stroke(Color.white, lineWidth: 3))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(auth.displayName)

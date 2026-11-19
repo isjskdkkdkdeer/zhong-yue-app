@@ -2,6 +2,30 @@ import SwiftUI
 import CoreImage
 import UIKit
 
+// MARK: - 当前头像（相册自选的照片优先，没有就用预设头像）
+
+/// 圆形头像：有相册自选照片就显示照片，没有就显示预设资源图。
+struct UserAvatarImage: View {
+    @EnvironmentObject var auth: AuthViewModel
+    var size: CGFloat
+
+    var body: some View {
+        Group {
+            if let photo = auth.customAvatarImage {
+                Image(uiImage: photo)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(auth.avatarAssetName)
+                    .resizable()
+                    .scaledToFill()
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+}
+
 // MARK: - 个人资料（可编辑：换头像 / 改男女 / 昵称 / 邮箱 / 密码 / 好友号）
 // 和网页版第 33 轮的“我的资料”面板一致。
 
@@ -9,6 +33,10 @@ struct ProfileDetailView: View {
     @EnvironmentObject var auth: AuthViewModel
 
     @State private var avatar = "AvatarImage"
+    @State private var customAvatar: UIImage?
+    @State private var customCover: UIImage?
+    @State private var showAvatarPicker = false
+    @State private var showCoverPicker = false
     @State private var gender = "male"
     @State private var nickname = ""
     @State private var email = ""
@@ -37,11 +65,19 @@ struct ProfileDetailView: View {
         Form {
             Section {
                 HStack(spacing: 14) {
-                    Image(avatar)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 64, height: 64)
-                        .clipShape(Circle())
+                    Group {
+                        if let photo = customAvatar {
+                            Image(uiImage: photo)
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            Image(avatar)
+                                .resizable()
+                                .scaledToFill()
+                        }
+                    }
+                    .frame(width: 64, height: 64)
+                    .clipShape(Circle())
                     VStack(alignment: .leading, spacing: 4) {
                         Text(nickname.isEmpty ? auth.displayName : nickname).font(.headline)
                         Text("ID: \(friendNumber.isEmpty ? auth.friendNumber : friendNumber)")
@@ -51,10 +87,13 @@ struct ProfileDetailView: View {
                 }
                 .padding(.vertical, 6)
 
-                // 换头像：按性别给选择。
+                // 换头像：按性别给选择；也可以从相册随便挑一张。
                 HStack(spacing: 16) {
                     ForEach(avatarOptions, id: \.self) { name in
-                        Button { avatar = name } label: {
+                        Button {
+                            avatar = name
+                            customAvatar = nil
+                        } label: {
                             Image(name)
                                 .resizable()
                                 .scaledToFill()
@@ -62,8 +101,8 @@ struct ProfileDetailView: View {
                                 .clipShape(Circle())
                                 .overlay(
                                     Circle().stroke(
-                                        avatar == name ? Color(red: 0, green: 0.48, blue: 1) : Color(.systemGray4),
-                                        lineWidth: avatar == name ? 3 : 1
+                                        customAvatar == nil && avatar == name ? Color(red: 0, green: 0.48, blue: 1) : Color(.systemGray4),
+                                        lineWidth: customAvatar == nil && avatar == name ? 3 : 1
                                     )
                                 )
                         }
@@ -72,12 +111,21 @@ struct ProfileDetailView: View {
                 }
                 .padding(.vertical, 4)
 
+                Button {
+                    showAvatarPicker = true
+                } label: {
+                    Label("从相册选", systemImage: "photo")
+                }
+                .buttonStyle(.bordered)
+
                 Picker("性别", selection: $gender) {
                     Text("男").tag("male")
                     Text("女").tag("female")
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: gender) { _, newGender in
+                    // 换性别只影响预设头像：自己从相册选的照片不换。
+                    guard customAvatar == nil else { return }
                     // 换性别后，当前头像不在新性别的选项里就换成第一个（和网页版一致）。
                     let options = newGender == "female" ? AuthViewModel.femaleAvatars : AuthViewModel.maleAvatars
                     if !options.contains(avatar) {
@@ -86,7 +134,52 @@ struct ProfileDetailView: View {
                 }
             } header: {
                 Text("头像与性别")
+            } footer: {
+                Text("从相册选的头像存在本机，换了性别也不会被覆盖；点预设头像可以换回来。")
             }
+
+            Section {
+                HStack(spacing: 14) {
+                    Group {
+                        if let cover = customCover {
+                            Image(uiImage: cover)
+                                .resizable()
+                                .scaledToFill()
+                        } else if let photo = customAvatar {
+                            Image(uiImage: photo)
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            Image(avatar)
+                                .resizable()
+                                .scaledToFill()
+                        }
+                    }
+                    .frame(width: 72, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    Text(customCover == nil ? "现在是默认背景" : "已用相册照片做背景")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                HStack(spacing: 12) {
+                    Button {
+                        showCoverPicker = true
+                    } label: {
+                        Label("从相册选", systemImage: "photo")
+                    }
+                    .buttonStyle(.bordered)
+                    if customCover != nil {
+                        Button("恢复默认") {
+                            customCover = nil
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            } header: {
+                Text("封面背景")
+            } footer: {
+                Text("封面背景存在本机；没选过就用默认图。")
 
             Section {
                 TextField("昵称", text: $nickname)
@@ -162,12 +255,24 @@ struct ProfileDetailView: View {
         }
         .onAppear {
             avatar = auth.avatarAssetName
+            customAvatar = auth.customAvatarImage
+            customCover = auth.customCoverImage
             gender = auth.gender
             nickname = currentNickname
             email = auth.email
             newPassword = ""
             confirmPassword = ""
             friendNumber = currentFriendNumber
+        }
+        .sheet(isPresented: $showAvatarPicker) {
+            PhotoPicker { image in
+                customAvatar = image
+            }
+        }
+        .sheet(isPresented: $showCoverPicker) {
+            PhotoPicker { image in
+                customCover = image
+            }
         }
     }
 
@@ -210,7 +315,19 @@ struct ProfileDetailView: View {
         defer { isSaving = false }
 
         // 头像和性别存本机（按邮箱分开存）。
-        auth.avatarAssetName = avatar
+        // 相册自选的头像优先：选了就存照片，没选就清掉照片、用预设头像。
+        if let photo = customAvatar {
+            auth.setCustomAvatar(photo)
+        } else {
+            auth.clearCustomAvatar()
+            auth.avatarAssetName = avatar
+        }
+        // 封面背景同样：选了就存照片，没选就恢复默认。
+        if let cover = customCover {
+            auth.setCustomCover(cover)
+        } else {
+            auth.clearCustomCover()
+        }
         auth.gender = gender
         auth.saveLocalProfile()
 
