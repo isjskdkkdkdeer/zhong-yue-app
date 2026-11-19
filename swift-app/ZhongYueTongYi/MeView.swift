@@ -2,10 +2,16 @@ import SwiftUI
 import UIKit
 
 /// “我的”页：照参考图做——顶部封面横幅 + 分组白色圆角卡片 + 彩色图标。
+///
+/// 导航说明（第 2 步修）：原来用 inline NavigationLink 放在 ScrollView 里，
+/// 封面那行还在 NavigationLink 里套了一个复制 Button，点按经常没反应。
+/// 现在改成 NavigationStack(path:) + navigationDestination 的编程式导航，
+/// 行就是普通 Button，点按直接往 path 里加目标，不再依赖 inline 链接的点击判定。
 struct MeView: View {
     @EnvironmentObject var auth: AuthViewModel
     @AppStorage("zy-ui-lang") private var uiLang = "zh"
     @AppStorage("zy-speak-lang") private var speakLang = "zh"
+    @State private var path: [MeDestination] = []
     @State private var showLogoutConfirm = false
     @State private var copied = false
 
@@ -13,36 +19,36 @@ struct MeView: View {
     private var speakLangName: String { speakLang == "vi" ? "Tiếng Việt" : "中文" }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 0) {
                     coverHeader
                     VStack(spacing: 16) {
                         settingsCard {
                             SettingRow(icon: "person.fill", iconColor: .blue, title: "个人资料") {
-                                ProfileDetailView()
+                                path.append(.profile)
                             }
                             Divider().padding(.leading, 58)
                             SettingRow(icon: "qrcode", iconColor: .orange, title: "推荐好友") {
-                                ReferFriendView()
+                                path.append(.refer)
                             }
                         }
                         settingsCard {
                             SettingRow(icon: "globe", iconColor: .purple, title: "界面语言", value: uiLangName) {
-                                LanguagePickerView(kind: .ui)
+                                path.append(.uiLang)
                             }
                             Divider().padding(.leading, 58)
                             SettingRow(icon: "mic.fill", iconColor: .green, title: "我说的语言", value: speakLangName) {
-                                LanguagePickerView(kind: .speak)
+                                path.append(.speakLang)
                             }
                         }
                         settingsCard {
                             SettingRow(icon: "questionmark.circle.fill", iconColor: .blue, title: "使用帮助") {
-                                HelpView()
+                                path.append(.help)
                             }
                             Divider().padding(.leading, 58)
                             SettingRow(icon: "shield.fill", iconColor: .gray, title: "隐私说明") {
-                                PrivacyView()
+                                path.append(.privacy)
                             }
                         }
                         Button(role: .destructive) {
@@ -59,7 +65,17 @@ struct MeView: View {
                 }
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: MeDestination.self) { destination in
+                switch destination {
+                case .profile: ProfileDetailView()
+                case .refer: ReferFriendView()
+                case .uiLang: LanguagePickerView(kind: .ui)
+                case .speakLang: LanguagePickerView(kind: .speak)
+                case .help: HelpView()
+                case .privacy: PrivacyView()
+                }
+            }
             .confirmationDialog("退出登录", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
                 Button("退出登录", role: .destructive) {
                     Task { await auth.signOut() }
@@ -73,7 +89,7 @@ struct MeView: View {
 
     private var coverHeader: some View {
         ZStack {
-            Image("AvatarImage")
+            Image(auth.avatarAssetName)
                 .resizable()
                 .scaledToFill()
                 .frame(height: 280)
@@ -88,53 +104,50 @@ struct MeView: View {
                 HStack {
                     Spacer()
                     HStack(spacing: 12) {
-                        coverCircleLink(icon: "qrcode.viewfinder") { ReferFriendView() }
-                        coverCircleLink(icon: "gearshape") { ProfileDetailView() }
+                        coverCircleButton(icon: "qrcode.viewfinder") { path.append(.refer) }
+                        coverCircleButton(icon: "gearshape") { path.append(.profile) }
                     }
                 }
                 Spacer()
-                NavigationLink(destination: ProfileDetailView()) {
-                    HStack(spacing: 14) {
-                        Image("AvatarImage")
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 76, height: 76)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(auth.displayName)
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.white)
-                            HStack(spacing: 6) {
-                                Text("ID: \(auth.friendNumber)")
-                                    .font(.system(size: 15))
+                // 整行点按进个人资料；复制按钮是独立的 Button，不再套在链接里。
+                HStack(spacing: 14) {
+                    Image(auth.avatarAssetName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 76, height: 76)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(auth.displayName)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(.white)
+                        HStack(spacing: 6) {
+                            Text("ID: \(auth.friendNumber)")
+                                .font(.system(size: 15))
+                                .foregroundColor(.white.opacity(0.85))
+                            Button(action: copyFriendNumber) {
+                                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.white.opacity(0.85))
-                                Button(action: copyFriendNumber) {
-                                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(.white.opacity(0.85))
-                                }
-                                .buttonStyle(.borderless)
                             }
+                            .buttonStyle(.borderless)
                         }
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.8))
                     }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.8))
                 }
-                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .onTapGesture { path.append(.profile) }
             }
             .padding(16)
         }
         .frame(height: 280)
     }
 
-    private func coverCircleLink<Destination: View>(
-        icon: String,
-        @ViewBuilder destination: () -> Destination
-    ) -> some View {
-        NavigationLink(destination: destination) {
+    private func coverCircleButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             ZStack {
                 Circle()
                     .fill(Color.white.opacity(0.25))
@@ -165,30 +178,41 @@ struct MeView: View {
     }
 }
 
+/// “我的”页的导航目标（编程式导航用）。
+enum MeDestination: Hashable {
+    case profile
+    case refer
+    case uiLang
+    case speakLang
+    case help
+    case privacy
+}
+
 /// 设置行：彩色圆角方块图标 + 文字 + 可选灰色值 + 右边灰色 ›。
-struct SettingRow<Destination: View>: View {
+/// 就是普通 Button，点按由调用方处理（往导航 path 里加目标）。
+struct SettingRow: View {
     let icon: String
     let iconColor: Color
     let title: String
     let value: String?
-    let destination: () -> Destination
+    let action: () -> Void
 
     init(
         icon: String,
         iconColor: Color,
         title: String,
         value: String? = nil,
-        @ViewBuilder destination: @escaping () -> Destination
+        action: @escaping () -> Void
     ) {
         self.icon = icon
         self.iconColor = iconColor
         self.title = title
         self.value = value
-        self.destination = destination
+        self.action = action
     }
 
     var body: some View {
-        NavigationLink(destination: destination) {
+        Button(action: action) {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)

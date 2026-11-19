@@ -13,6 +13,8 @@ struct ZhongYueTongYiApp: App {
                     for await (_, session) in SupabaseManager.shared.client.auth.authStateChanges {
                         auth.session = session
                         auth.isLoading = false
+                        // 会话恢复/刷新后也要读出本机存的头像和性别。
+                        auth.loadLocalProfile()
                     }
                 }
         }

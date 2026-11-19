@@ -27,6 +27,10 @@ final class AuthViewModel: ObservableObject {
     @Published var isLoading = true
     @Published var authError: String?
 
+    /// 本机资料：头像（Assets 资源名）、性别。按邮箱分开存，和网页版同款 key。
+    @Published var avatarAssetName = "AvatarImage"
+    @Published var gender = "male"
+
     private let client = SupabaseManager.shared.client
 
     var isSignedIn: Bool { session != nil }
@@ -51,12 +55,16 @@ final class AuthViewModel: ObservableObject {
         return "—"
     }
 
+    /// 当前邮箱。
+    var email: String { currentUser?.email ?? "" }
+
     func signIn(email: String, password: String) async {
         authError = nil
         do {
             let newSession = try await client.auth.signIn(email: email, password: password)
             session = newSession
             isLoading = false
+            loadLocalProfile()
         } catch {
             authError = error.localizedDescription
         }
@@ -68,6 +76,90 @@ final class AuthViewModel: ObservableObject {
             session = nil
         } catch {
             authError = error.localizedDescription
+        }
+    }
+
+    // MARK: - 本机资料（头像 / 性别，按邮箱存）
+
+    private func avatarKey(for email: String) -> String {
+        "zhyuetong-avatar-" + email
+    }
+
+    private func genderKey(for email: String) -> String {
+        "zhyuetong-gender-" + email
+    }
+
+    /// 登录后（或会话恢复后）读出本机存的头像和性别。
+    func loadLocalProfile() {
+        let email = self.email
+        guard !email.isEmpty else { return }
+        let savedAvatar = UserDefaults.standard.string(forKey: avatarKey(for: email)) ?? ""
+        let savedGender = UserDefaults.standard.string(forKey: genderKey(for: email)) ?? ""
+        avatarAssetName = Self.avatarAssetNames.contains(savedAvatar) ? savedAvatar : "AvatarImage"
+        gender = (savedGender == "female" || savedGender == "male") ? savedGender : "male"
+    }
+
+    func saveLocalProfile() {
+        let email = self.email
+        guard !email.isEmpty else { return }
+        UserDefaults.standard.set(avatarAssetName, forKey: avatarKey(for: email))
+        UserDefaults.standard.set(gender, forKey: genderKey(for: email))
+    }
+
+    /// 全部头像资源名。男：默认头像 + m1 + m2；女：f1 + f2（和网页版一致）。
+    static let maleAvatars = ["AvatarImage", "AvatarM1", "AvatarM2"]
+    static let femaleAvatars = ["AvatarF1", "AvatarF2"]
+    static let avatarAssetNames = maleAvatars + femaleAvatars
+
+    /// 当前性别可选的头像。
+    var avatarOptions: [String] {
+        gender == "female" ? Self.femaleAvatars : Self.maleAvatars
+    }
+
+    // MARK: - 改资料（Supabase updateUser）
+
+    /// 把更新后的用户写回当前会话，让“我的”页封面立刻刷新。
+    private func applyUpdatedUser(_ user: User) {
+        if var s = session {
+            s.user = user
+            session = s
+        }
+    }
+
+    /// 改昵称 / 好友号（写 user_metadata）。GoTrue 会把 data 合并进现有 metadata。
+    @discardableResult
+    func updateProfileData(nickname: String, friendNumber: String) async throws -> User {
+        let updated = try await client.auth.update(user: UserAttributes(data: [
+            "nickname": .string(nickname),
+            "num": .string(friendNumber),
+        ]))
+        applyUpdatedUser(updated)
+        return updated
+    }
+
+    /// 改邮箱。Supabase 会往新邮箱发确认邮件，点确认后才生效，确认前仍用旧邮箱登录。
+    @discardableResult
+    func updateEmail(_ newEmail: String) async throws -> User {
+        let updated = try await client.auth.update(user: UserAttributes(email: newEmail))
+        applyUpdatedUser(updated)
+        return updated
+    }
+
+    /// 改密码。
+    @discardableResult
+    func updatePassword(_ newPassword: String) async throws -> User {
+        let updated = try await client.auth.update(user: UserAttributes(password: newPassword))
+        applyUpdatedUser(updated)
+        return updated
+    }
+
+    /// 从服务器重新取一次当前用户（刷新 metadata）。
+    func refreshUser() async {
+        do {
+            let user = try await client.auth.user()
+            applyUpdatedUser(user)
+        } catch {
+            // 静默失败：界面仍用旧数据。
         }
     }
 }
