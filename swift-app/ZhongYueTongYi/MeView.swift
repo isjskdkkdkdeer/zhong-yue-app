@@ -26,8 +26,10 @@ struct MeView: View {
                     coverHeader
                     VStack(spacing: 16) {
                         settingsCard {
-                            SettingRow(icon: "person.fill", iconColor: .blue, title: "个人资料") {
-                                path.append(.profile)
+                            // “个人资料”行已去掉：点封面头像就能进个人资料页，这行多余。
+                            // 原来的位置改成“朋友圈”。
+                            SettingRow(icon: "camera.fill", iconColor: .teal, title: "朋友圈") {
+                                path.append(.moments)
                             }
                             Divider().padding(.leading, 58)
                             SettingRow(icon: "qrcode", iconColor: .orange, title: "推荐好友") {
@@ -70,6 +72,7 @@ struct MeView: View {
             .navigationDestination(for: MeDestination.self) { destination in
                 switch destination {
                 case .profile: ProfileDetailView()
+                case .moments: MomentsView()
                 case .refer: ReferFriendView()
                 case .uiLang: LanguagePickerView(kind: .ui)
                 case .speakLang: LanguagePickerView(kind: .speak)
@@ -199,6 +202,7 @@ struct MeView: View {
 /// “我的”页的导航目标（编程式导航用）。
 enum MeDestination: Hashable {
     case profile
+    case moments
     case refer
     case uiLang
     case speakLang
