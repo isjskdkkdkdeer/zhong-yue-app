@@ -63,8 +63,21 @@ struct ChatView: View {
             store.reload()
         }
         .toolbar {
-            if isBot {
-                ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                // 好友聊天：语音 / 视频通话按钮（翻译助手没有）。
+                if !isBot {
+                    Button {
+                        Task { await CallManager.shared.startCall(to: conversationId, displayName: store.title, isVideo: false) }
+                    } label: {
+                        Image(systemName: "phone.fill")
+                    }
+                    Button {
+                        Task { await CallManager.shared.startCall(to: conversationId, displayName: store.title, isVideo: true) }
+                    } label: {
+                        Image(systemName: "video.fill")
+                    }
+                }
+                if isBot {
                     Button {
                         store.botSpeakEnabled.toggle()
                         if !store.botSpeakEnabled { store.stopSpeaking() }

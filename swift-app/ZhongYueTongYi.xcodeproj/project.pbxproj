@@ -23,6 +23,9 @@
 		DD38B9F779024004903C17CF /* PhotoPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7881E84CB4C549DEBA3A9B00 /* PhotoPicker.swift */; };
 		EB3055DAD513731D4A157243 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */; };
 		2EF6CE185FD0A6B11E37332E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 303379608E8F0C7723AB249C /* Supabase */; };
+		E8BB1AA44CB4B4339BFF110A /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 17F67BAE9DCC19D03B33B941 /* WebRTC */; };
+		C5850612B12F7F061E3D8100 /* CallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C33E98E2D1B700AB03C429 /* CallManager.swift */; };
+		FC103C533CC443570646F563 /* CallViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D21DB3A139A7FAB73873911 /* CallViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +43,8 @@
 		9F78510CFFBC40C7A657361B /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		59B3C58E009945B4B5E4CB5F /* QuickTranslateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickTranslateView.swift; sourceTree = "<group>"; };
 		7881E84CB4C549DEBA3A9B00 /* PhotoPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPicker.swift; sourceTree = "<group>"; };
+		F5C33E98E2D1B700AB03C429 /* CallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
+		0D21DB3A139A7FAB73873911 /* CallViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallViews.swift; sourceTree = "<group>"; };
 		3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B90BD52D80E792E8FC8B5C98 /* ZhongYueTongYi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZhongYueTongYi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -50,6 +55,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2EF6CE185FD0A6B11E37332E /* Supabase in Frameworks */,
+				E8BB1AA44CB4B4339BFF110A /* WebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +95,8 @@
 				9F78510CFFBC40C7A657361B /* ChatView.swift */,
 				59B3C58E009945B4B5E4CB5F /* QuickTranslateView.swift */,
 				7881E84CB4C549DEBA3A9B00 /* PhotoPicker.swift */,
+				F5C33E98E2D1B700AB03C429 /* CallManager.swift */,
+				0D21DB3A139A7FAB73873911 /* CallViews.swift */,
 				3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */
 			);
 			path = ZhongYueTongYi;
@@ -112,6 +120,7 @@
 			name = ZhongYueTongYi;
 			packageProductDependencies = (
 				303379608E8F0C7723AB249C /* Supabase */,
+				17F67BAE9DCC19D03B33B941 /* WebRTC */,
 			);
 			productName = ZhongYueTongYi;
 			productReference = B90BD52D80E792E8FC8B5C98 /* ZhongYueTongYi.app */;
@@ -143,6 +152,7 @@
 			mainGroup = 3E55646611CD630C6193ABD5;
 			packageReferences = (
 				89202E1ED93ACB4961FBB3A4 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				2B0261A1BB65B88D57B9B46C /* XCRemoteSwiftPackageReference "WebRTC" */,
 			);
 			productRefGroup = 8C1969BC5989E871C77EB3CC /* Products */;
 			projectDirPath = "";
@@ -183,6 +193,8 @@
 				66B9D441C5754037B29135AE /* ChatView.swift in Sources */,
 				6DCC8504786345C3916EF220 /* QuickTranslateView.swift in Sources */,
 				DD38B9F779024004903C17CF /* PhotoPicker.swift in Sources */,
+				C5850612B12F7F061E3D8100 /* CallManager.swift in Sources */,
+				FC103C533CC443570646F563 /* CallViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,7 +321,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "换头像和封面背景时，需要从相册选一张照片。";
-				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友，需要用相机。";
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友、打视频电话，需要用相机。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -336,7 +348,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "换头像和封面背景时，需要从相册选一张照片。";
-				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友，需要用相机。";
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友、打视频电话，需要用相机。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -384,6 +396,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		2B0261A1BB65B88D57B9B46C /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 158.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -391,6 +411,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 89202E1ED93ACB4961FBB3A4 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		17F67BAE9DCC19D03B33B941 /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B0261A1BB65B88D57B9B46C /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

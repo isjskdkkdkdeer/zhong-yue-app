@@ -267,6 +267,33 @@ struct FriendsView: View {
                                     Label("删除", systemImage: "trash")
                                 }
                             }
+                            // 好友行左滑：语音 / 视频通话（第 10 步）。
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    Task {
+                                        await CallManager.shared.startCall(
+                                            to: friend.id,
+                                            displayName: store.displayName(for: friend),
+                                            isVideo: false
+                                        )
+                                    }
+                                } label: {
+                                    Label("语音", systemImage: "phone.fill")
+                                }
+                                .tint(Color(red: 0, green: 0.48, blue: 1))
+                                Button {
+                                    Task {
+                                        await CallManager.shared.startCall(
+                                            to: friend.id,
+                                            displayName: store.displayName(for: friend),
+                                            isVideo: true
+                                        )
+                                    }
+                                } label: {
+                                    Label("视频", systemImage: "video.fill")
+                                }
+                                .tint(.green)
+                            }
                             .contextMenu {
                                 Button("改备注名") {
                                     remarkText = store.displayName(for: friend)
