@@ -16,6 +16,10 @@
 		BE319CF99A8FCD1D431A8683 /* CallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08737595F6D1BAD02F9585E4 /* CallsView.swift */; };
 		4BE51C5646D408C8673A2B8F /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25199DF3B2619954FD8EE8FE /* MeView.swift */; };
 		6B31674D3108648AF7A7096C /* MeDetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC08C2377E660F4FBAD0A53 /* MeDetailViews.swift */; };
+		D4D689684F3D4550999B6EF0 /* Translator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E9F05D7507C4C5996A5CFD8 /* Translator.swift */; };
+		7EF66C27F4544F9DB8F1D9F3 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E3B035AFD14D9BA358FB21 /* ChatStore.swift */; };
+		66B9D441C5754037B29135AE /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F78510CFFBC40C7A657361B /* ChatView.swift */; };
+		6DCC8504786345C3916EF220 /* QuickTranslateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B3C58E009945B4B5E4CB5F /* QuickTranslateView.swift */; };
 		EB3055DAD513731D4A157243 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */; };
 		2EF6CE185FD0A6B11E37332E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 303379608E8F0C7723AB249C /* Supabase */; };
 /* End PBXBuildFile section */
@@ -30,6 +34,10 @@
 		08737595F6D1BAD02F9585E4 /* CallsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallsView.swift; sourceTree = "<group>"; };
 		25199DF3B2619954FD8EE8FE /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
 		ABC08C2377E660F4FBAD0A53 /* MeDetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeDetailViews.swift; sourceTree = "<group>"; };
+		3E9F05D7507C4C5996A5CFD8 /* Translator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translator.swift; sourceTree = "<group>"; };
+		63E3B035AFD14D9BA358FB21 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
+		9F78510CFFBC40C7A657361B /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		59B3C58E009945B4B5E4CB5F /* QuickTranslateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickTranslateView.swift; sourceTree = "<group>"; };
 		3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B90BD52D80E792E8FC8B5C98 /* ZhongYueTongYi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZhongYueTongYi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -74,6 +82,10 @@
 				08737595F6D1BAD02F9585E4 /* CallsView.swift */,
 				25199DF3B2619954FD8EE8FE /* MeView.swift */,
 				ABC08C2377E660F4FBAD0A53 /* MeDetailViews.swift */,
+				3E9F05D7507C4C5996A5CFD8 /* Translator.swift */,
+				63E3B035AFD14D9BA358FB21 /* ChatStore.swift */,
+				9F78510CFFBC40C7A657361B /* ChatView.swift */,
+				59B3C58E009945B4B5E4CB5F /* QuickTranslateView.swift */,
 				3F48DF4F3860AD99D8ED0721 /* Assets.xcassets */
 			);
 			path = ZhongYueTongYi;
@@ -163,6 +175,10 @@
 				BE319CF99A8FCD1D431A8683 /* CallsView.swift in Sources */,
 				4BE51C5646D408C8673A2B8F /* MeView.swift in Sources */,
 				6B31674D3108648AF7A7096C /* MeDetailViews.swift in Sources */
+				D4D689684F3D4550999B6EF0 /* Translator.swift in Sources */,
+				7EF66C27F4544F9DB8F1D9F3 /* ChatStore.swift in Sources */,
+				66B9D441C5754037B29135AE /* ChatView.swift in Sources */,
+				6DCC8504786345C3916EF220 /* QuickTranslateView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +303,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -311,6 +328,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

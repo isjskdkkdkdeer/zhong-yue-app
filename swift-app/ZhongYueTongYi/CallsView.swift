@@ -13,3 +13,27 @@ struct CallsView: View {
         }
     }
 }
+
+/// 通用占位页：明确告诉用户这是还没做的功能，不冒充已实现。
+struct PlaceholderView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 56))
+                .foregroundColor(.secondary)
+            Text(title)
+                .font(.headline)
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+}

@@ -1,39 +1,118 @@
 import SwiftUI
 
-/// 消息页：第一步只做占位界面，后续步骤接入真实消息、翻译与语音消息。
+/// 消息列表页：顶部固定翻译助手（置顶、不能删、永远在线，头像用 App logo），
+/// 下面是本机好友列表。点开进聊天页。
+/// 限制：好友列表只存本机，和网页版不互通（网页版好友在浏览器本地存储里）。
 struct MessagesView: View {
+    @EnvironmentObject var friendStore: FriendStore
+    @State private var path: [MessagesDestination] = []
+    @State private var showQuickTranslate = false
+
     var body: some View {
-        NavigationStack {
-            PlaceholderView(
-                icon: "message.fill",
-                title: "消息功能即将推出",
-                subtitle: "后续步骤接入真实消息、翻译与语音消息。"
-            )
+        NavigationStack(path: $path) {
+            List {
+                // 翻译助手：永远置顶。
+                Button(action: { path.append(.bot) }) {
+                    HStack(spacing: 12) {
+                        Image("AppLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text(BotAssistant.nameZh)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text("Trợ lý dịch")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 8, height: 8)
+                                Text(lastPreview(for: BotAssistant.id) ?? "永远在线，随时可以聊天")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(Color(.tertiaryLabel))
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+
+                Section {
+                    if friendStore.friends.isEmpty {
+                        Text("还没有好友，去“好友”页输入对方 6 位好友号添加。")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(friendStore.friends) { friend in
+                            Button(action: { path.append(.friend(friend)) }) {
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        Circle().fill(Color(.systemGray5))
+                                        Text(String(friend.nickname.prefix(1)))
+                                            .font(.headline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(width: 48, height: 48)
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(friend.nickname)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        Text(lastPreview(for: friend.id) ?? "好友号 \(friend.id)")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(Color(.tertiaryLabel))
+                                }
+                                .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } footer: {
+                    Text("好友列表只存本机，和网页版不互通；好友聊天目前是本机翻译演示，真正的消息收发要等好友连接那一步。")
+                }
+            }
             .navigationTitle("消息")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("翻译") { showQuickTranslate = true }
+                }
+            }
+            .navigationDestination(for: MessagesDestination.self) { destination in
+                switch destination {
+                case .bot:
+                    ChatView(conversationId: BotAssistant.id, isBot: true, title: BotAssistant.nameZh)
+                case .friend(let friend):
+                    ChatView(conversationId: friend.id, isBot: false, title: friend.nickname)
+                }
+            }
+            .sheet(isPresented: $showQuickTranslate) {
+                QuickTranslateView()
+            }
         }
+    }
+
+    private func lastPreview(for conversationId: String) -> String? {
+        ChatStore.lastMessagePreview(for: conversationId)
     }
 }
 
-/// 通用占位页：明确告诉用户这是还没做的功能，不冒充已实现。
-struct PlaceholderView: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 56))
-                .foregroundColor(.secondary)
-            Text(title)
-                .font(.headline)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
-    }
+/// 消息列表的导航目标（编程式导航用，和“我的”页同款做法）。
+enum MessagesDestination: Hashable {
+    case bot
+    case friend(NativeFriend)
 }

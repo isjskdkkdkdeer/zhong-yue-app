@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct NativeFriend: Codable, Identifiable, Equatable {
+struct NativeFriend: Codable, Identifiable, Equatable, Hashable {
     /// 6 位好友号，即好友的唯一标识。
     var id: String
     var nickname: String
@@ -51,7 +51,8 @@ final class FriendStore: ObservableObject {
 }
 
 struct FriendsView: View {
-    @StateObject private var store = FriendStore()
+    /// 好友列表由 MainTabView 统一持有，和消息列表共用同一份数据。
+    @EnvironmentObject var store: FriendStore
     @State private var showAddFriend = false
 
     var body: some View {
@@ -77,12 +78,7 @@ struct FriendsView: View {
                         Section {
                             ForEach(store.friends) { friend in
                                 NavigationLink {
-                                    PlaceholderView(
-                                        icon: "message.fill",
-                                        title: "与 \(friend.nickname) 聊天",
-                                        subtitle: "聊天功能后续步骤接入。"
-                                    )
-                                    .navigationTitle(friend.nickname)
+                                    ChatView(conversationId: friend.id, isBot: false, title: friend.nickname)
                                 } label: {
                                     HStack(spacing: 12) {
                                         ZStack {
