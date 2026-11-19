@@ -13,9 +13,11 @@ struct ChatView: View {
     @State private var micHint: String?
 
     private let isBot: Bool
+    private let conversationId: String
 
     init(conversationId: String, isBot: Bool, title: String) {
         self.isBot = isBot
+        self.conversationId = conversationId
         _store = StateObject(wrappedValue: ChatStore(conversationId: conversationId, isBot: isBot, title: title))
     }
 

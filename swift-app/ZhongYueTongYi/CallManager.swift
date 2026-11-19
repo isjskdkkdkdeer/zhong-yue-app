@@ -307,7 +307,7 @@ final class CallManager: ObservableObject {
                   let lineIndex = cand["sdpMLineIndex"]?.intValue else { return }
             let candidate = RTCIceCandidate(sdp: sdp, sdpMLineIndex: Int32(lineIndex), sdpMid: cand["sdpMid"]?.stringValue)
             if peerConnection?.remoteDescription != nil {
-                peerConnection?.add(candidate, completionHandler: nil)
+                peerConnection?.add(candidate) { _ in }
             } else {
                 // 对方描述还没设好：先攒着，等设好再加。
                 pendingCandidates.append(candidate)
@@ -417,7 +417,7 @@ final class CallManager: ObservableObject {
         createPeerConnection()
         addLocalTracks()
         let offer = RTCSessionDescription(type: .offer, sdp: invite.offerSdp)
-        guard await setRemoteDescription(offer) else {
+        guard await setRemoteDescription(sdp: offer.sdp, type: offer.type) else {
             endCall(reason: .failed, notice: "接通失败，请检查网络再试")
             return
         }
@@ -639,7 +639,7 @@ final class CallManager: ObservableObject {
     private func drainPendingCandidates() {
         guard let pc = peerConnection, pc.remoteDescription != nil else { return }
         for candidate in pendingCandidates {
-            pc.add(candidate, completionHandler: nil)
+            pc.add(candidate) { _ in }
         }
         pendingCandidates.removeAll()
     }
@@ -703,11 +703,7 @@ final class CallManager: ObservableObject {
         let session = RTCAudioSession.sharedInstance()
         session.lockForConfiguration()
         defer { session.unlockForConfiguration() }
-        _ = try? session.setCategory(
-            AVAudioSession.Category.playAndRecord.rawValue,
-            mode: AVAudioSession.Mode.voiceChat.rawValue,
-            options: []
-        )
+        _ = try? session.setCategory(.playAndRecord, mode: .voiceChat, options: [])
         _ = try? session.setActive(true)
         // 视频通话默认开免提，语音默认用听筒。
         if isVideoCall {
@@ -734,7 +730,11 @@ final class CallManager: ObservableObject {
         case .denied, .restricted:
             return "相机权限没开：去手机设置里打开这个 App 的相机权限，才能打视频电话（语音电话不受影响）。"
         case .notDetermined:
-            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            let granted = await withCheckedContinuation { cont in
+                AVCaptureDevice.requestAccess(for: .video) { granted in
+                    cont.resume(returning: granted)
+                }
+            }
             if !granted { return "没有相机权限打不了视频电话，去手机设置里打开相机权限再试。" }
         default:
             break
