@@ -43,6 +43,16 @@ func makeQRImage(for string: String) -> UIImage? {
     return UIImage(cgImage: cgImage)
 }
 
+/// 推荐好友 / 我的二维码编码的内容：带好友号的邀请链接，扫一扫能直接解析出好友号。
+/// 好友号没设置好就只编网址。
+func appInviteURL(for friendNumber: String) -> String {
+    let num = friendNumber.trimmingCharacters(in: .whitespaces)
+    if num.count == 6 && num.allSatisfy({ $0.isNumber }) {
+        return "https://zyty.cc.cd/?add=\(num)"
+    }
+    return "https://zyty.cc.cd"
+}
+
 /// 手机号打码：留前 3 位 + **** + 后 2 位（比如 +84****99）。
 func maskedPhone(_ phone: String) -> String {
     let kept = phone.filter { $0.isNumber || $0 == "+" }
@@ -205,6 +215,8 @@ enum ProfileSubPage: Hashable {
 struct ProfileDetailView: View {
     @EnvironmentObject var auth: AuthViewModel
     @AppStorage("zy-ringtone") private var ringtone = Ringtone.defaultTone.rawValue
+    /// “我的”页 NavigationStack 的 path：行改成普通 Button，点按往这里加目标。
+    @Binding var path: [MeDestination]
 
     private var nicknameValue: String {
         let nick = auth.metadataString("nickname")
@@ -269,22 +281,25 @@ struct ProfileDetailView: View {
         .navigationTitle("个人资料")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
-        .navigationDestination(for: ProfileSubPage.self) { page in
-            switch page {
-            case .avatar: AvatarEditorView()
-            case .nickname: NicknameEditorView()
-            case .gender: GenderEditorView()
-            case .region: RegionEditorView()
-            case .phone: PhoneEditorView()
-            case .friendNumber: FriendNumberEditorView()
-            case .qrCode: MyQRView()
-            case .nudge: NudgeEditorView()
-            case .signature: SignatureEditorView()
-            case .ringtone: RingtonePickerView()
-            case .email: EmailEditorView()
-            case .password: PasswordEditorView()
-            case .cover: CoverEditorView()
-            }
+    }
+
+    /// 子页映射（编程式导航用，目标在“我的”页的 NavigationStack 里注册）。
+    @ViewBuilder
+    static func subPageView(for page: ProfileSubPage) -> some View {
+        switch page {
+        case .avatar: AvatarEditorView()
+        case .nickname: NicknameEditorView()
+        case .gender: GenderEditorView()
+        case .region: RegionEditorView()
+        case .phone: PhoneEditorView()
+        case .friendNumber: FriendNumberEditorView()
+        case .qrCode: MyQRView()
+        case .nudge: NudgeEditorView()
+        case .signature: SignatureEditorView()
+        case .ringtone: RingtonePickerView()
+        case .email: EmailEditorView()
+        case .password: PasswordEditorView()
+        case .cover: CoverEditorView()
         }
     }
 
@@ -296,8 +311,16 @@ struct ProfileDetailView: View {
             .background(Color.white)
     }
 
+    /// 点按修：第 4 步的 13 行用的是 NavigationLink，放在 ScrollView 里——
+    /// 行中间的空白区域（Spacer 的位置）没有内容，SwiftUI 点按会透过行落到 ScrollView 上，
+    /// 只有文字、值、箭头这些有内容的地方才有反应，所以用户要点到手机边上才能点开。
+    /// 现在改成普通 Button + 编程式导航（和“我的”页、消息列表同款做法），
+    /// 再加 .frame(maxWidth: .infinity) + .contentShape(Rectangle())，
+    /// 让整行从左到右、中间空白处都能点开。
     private func profileRow(title: String, value: String?, isPlaceholder: Bool = false, page: ProfileSubPage) -> some View {
-        NavigationLink(value: page) {
+        Button {
+            path.append(.profileSub(page))
+        } label: {
             HStack {
                 Text(title)
                     .foregroundColor(.primary)
@@ -310,6 +333,8 @@ struct ProfileDetailView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color(.tertiaryLabel))
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
         }
@@ -318,7 +343,9 @@ struct ProfileDetailView: View {
 
     /// 头像行更高（约 72pt），右边是方形小头像缩略图 + 箭头。
     private var avatarRow: some View {
-        NavigationLink(value: ProfileSubPage.avatar) {
+        Button {
+            path.append(.profileSub(.avatar))
+        } label: {
             HStack {
                 Text("头像")
                     .foregroundColor(.primary)
@@ -340,6 +367,8 @@ struct ProfileDetailView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color(.tertiaryLabel))
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
         }
@@ -348,7 +377,9 @@ struct ProfileDetailView: View {
 
     /// 我的二维码：右边一个二维码小图标 + 箭头。
     private var qrRow: some View {
-        NavigationLink(value: ProfileSubPage.qrCode) {
+        Button {
+            path.append(.profileSub(.qrCode))
+        } label: {
             HStack {
                 Text("我的二维码")
                     .foregroundColor(.primary)
@@ -360,6 +391,8 @@ struct ProfileDetailView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color(.tertiaryLabel))
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
         }
@@ -826,7 +859,7 @@ struct MyQRView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            if let qr = makeQRImage(for: "https://zyty.cc.cd") {
+            if let qr = makeQRImage(for: appInviteURL(for: auth.friendNumber)) {
                 Image(uiImage: qr)
                     .interpolation(.none)
                     .resizable()
@@ -1253,7 +1286,7 @@ struct ReferFriendView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            if let qr = qrImage(for: "https://zyty.cc.cd") {
+            if let qr = qrImage(for: appInviteURL(for: auth.friendNumber)) {
                 Image(uiImage: qr)
                     .interpolation(.none)
                     .resizable()

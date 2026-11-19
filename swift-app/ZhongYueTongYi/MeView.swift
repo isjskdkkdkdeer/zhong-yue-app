@@ -71,7 +71,8 @@ struct MeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: MeDestination.self) { destination in
                 switch destination {
-                case .profile: ProfileDetailView()
+                case .profile: ProfileDetailView(path: $path)
+                case .profileSub(let page): ProfileDetailView.subPageView(for: page)
                 case .moments: MomentsView()
                 case .refer: ReferFriendView()
                 case .uiLang: LanguagePickerView(kind: .ui)
@@ -200,8 +201,11 @@ struct MeView: View {
 }
 
 /// “我的”页的导航目标（编程式导航用）。
+/// profileSub 是个人资料页里的 13 行子页：资料页自己不另建 NavigationStack，
+/// 点行时往同一个 path 里加目标，返回也走同一条栈。
 enum MeDestination: Hashable {
     case profile
+    case profileSub(ProfileSubPage)
     case moments
     case refer
     case uiLang
@@ -255,6 +259,10 @@ struct SettingRow: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color(.tertiaryLabel))
             }
+            // 点按修：和个人资料页同款毛病——行中间空白处没有内容，点按会透过行，
+            // 加上整行宽 + contentShape，让整行任何位置都能点开。
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
         }

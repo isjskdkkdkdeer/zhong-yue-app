@@ -309,6 +309,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "换头像和封面背景时，需要从相册选一张照片。";
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友，需要用相机。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -335,6 +336,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "录语音消息给翻译助手识别，需要用麦克风。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "换头像和封面背景时，需要从相册选一张照片。";
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫二维码加好友，需要用相机。";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
