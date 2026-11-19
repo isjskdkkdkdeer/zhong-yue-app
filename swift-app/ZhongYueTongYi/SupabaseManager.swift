@@ -37,7 +37,25 @@ final class AuthViewModel: ObservableObject {
     @Published var customAvatarImage: UIImage?
     @Published var customCoverImage: UIImage?
 
-    private let client = SupabaseManager.shared.client
+    /// 拍一拍后缀（本机存，按邮箱分开；以后聊天里拍一拍功能用得上）。
+    @Published var nudgeText = ""
+
+    private func nudgeKey(for email: String) -> String {
+        "zhyuetong-nudge-" + email
+    }
+
+    /// 读 user_metadata 里的一个字符串值。
+    func metadataString(_ key: String) -> String {
+        currentUser?.userMetadata[key]?.stringValue ?? ""
+    }
+
+    /// 地区：国家 + 城市（分两个 key 存，方便回填编辑）。
+    var regionCountry: String { metadataString("region_country") }
+    var regionCity: String { metadataString("region_city") }
+
+    /// 手机号 / 签名（写 user_metadata）。
+    var phoneNumber: String { metadataString("phone") }
+    var signature: String { metadataString("signature") }
 
     var isSignedIn: Bool { session != nil }
     var currentUser: User? { session?.user }
@@ -173,6 +191,7 @@ final class AuthViewModel: ObservableObject {
         let savedGender = UserDefaults.standard.string(forKey: genderKey(for: email)) ?? ""
         avatarAssetName = Self.avatarAssetNames.contains(savedAvatar) ? savedAvatar : "AvatarImage"
         gender = (savedGender == "female" || savedGender == "male") ? savedGender : "male"
+        nudgeText = UserDefaults.standard.string(forKey: nudgeKey(for: email)) ?? ""
         if UserDefaults.standard.string(forKey: avatarPhotoFlagKey(for: email)) == "1",
            let data = try? Data(contentsOf: photoFileURL(kind: "avatar", email: email)),
            let image = UIImage(data: data) {
@@ -194,6 +213,7 @@ final class AuthViewModel: ObservableObject {
         guard !email.isEmpty else { return }
         UserDefaults.standard.set(avatarAssetName, forKey: avatarKey(for: email))
         UserDefaults.standard.set(gender, forKey: genderKey(for: email))
+        UserDefaults.standard.set(nudgeText, forKey: nudgeKey(for: email))
         // 相册照片的标记以内存状态为准（set/clear 里已写过，这里再对齐一次）。
         if customAvatarImage != nil {
             UserDefaults.standard.set("1", forKey: avatarPhotoFlagKey(for: email))
@@ -230,12 +250,26 @@ final class AuthViewModel: ObservableObject {
     /// 改昵称 / 好友号（写 user_metadata）。GoTrue 会把 data 合并进现有 metadata。
     @discardableResult
     func updateProfileData(nickname: String, friendNumber: String) async throws -> User {
-        let updated = try await client.auth.update(user: UserAttributes(data: [
+        try await updateMetadata([
             "nickname": .string(nickname),
             "num": .string(friendNumber),
-        ]))
+        ])
+    }
+
+    /// 通用：写任意 user_metadata 键（GoTrue 会把 data 合并进现有 metadata）。
+    @discardableResult
+    func updateMetadata(_ values: [String: AnyJSON]) async throws -> User {
+        let updated = try await client.auth.update(user: UserAttributes(data: values))
         applyUpdatedUser(updated)
         return updated
+    }
+
+    /// 改拍一拍后缀（只存本机）。
+    func setNudgeText(_ text: String) {
+        nudgeText = text
+        let email = self.email
+        guard !email.isEmpty else { return }
+        UserDefaults.standard.set(text, forKey: nudgeKey(for: email))
     }
 
     /// 改邮箱。Supabase 会往新邮箱发确认邮件，点确认后才生效，确认前仍用旧邮箱登录。
