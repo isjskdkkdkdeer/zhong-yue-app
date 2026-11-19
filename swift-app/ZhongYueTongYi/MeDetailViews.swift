@@ -153,6 +153,7 @@ struct ProfileDetailView: View {
         }
         .navigationTitle("个人资料")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("保存") { Task { await save() } }
@@ -300,6 +301,8 @@ struct ReferFriendView: View {
         }
         .padding(.top, 40)
         .navigationTitle("推荐好友")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
@@ -351,7 +354,10 @@ struct LanguagePickerView: View {
                 Text("语言设置保存在本机。")
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle(kind == .ui ? "界面语言" : "我说的语言")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
     }
 }
 
@@ -387,7 +393,10 @@ struct HelpView: View {
                 .padding(.vertical, 6)
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("使用帮助")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
     }
 }
 
@@ -415,6 +424,9 @@ struct PrivacyView: View {
                 .padding(.vertical, 6)
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("隐私说明")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
     }
 }
