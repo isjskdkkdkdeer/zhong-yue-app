@@ -23,7 +23,7 @@ struct MainTabView: View {
         }
         .environmentObject(friendStore)
         .tint(Color(red: 0, green: 0.48, blue: 1))
-        .toolbarBackground(.white, for: .tabBar)
+        .toolbarBackground(Color(.systemBackground), for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }
 }

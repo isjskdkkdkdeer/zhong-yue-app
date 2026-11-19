@@ -61,7 +61,7 @@ struct MeView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                         }
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
                     }
                     .padding(16)
@@ -193,9 +193,12 @@ struct MeView: View {
 
     // MARK: - 卡片
 
+    /// 分组卡片：深色模式修（第 7 步）——原来写死 Color.white，
+    /// 深色模式下行文字是自适应的白色，白字印白底看不见。
+    /// 改成 secondarySystemGroupedBackground：浅色还是白卡片，深色变深灰。
     private func settingsCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Color.white)
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(16)
     }
 }

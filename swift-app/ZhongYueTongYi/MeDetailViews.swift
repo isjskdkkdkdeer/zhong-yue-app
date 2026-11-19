@@ -441,9 +441,11 @@ struct ProfileDetailView: View {
     // MARK: - 行
 
     /// 白底整行：左边黑色项目名，右边灰色值 + 灰色小箭头。
+    /// 深色模式修（第 7 步）：原来写死 Color.white，深色模式下白字印白底看不见。
+    /// 改成 secondarySystemGroupedBackground：浅色还是白底，深色变深灰。
     private func sectionCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Color.white)
+            .background(Color(.secondarySystemGroupedBackground))
     }
 
     /// 点按修：第 4 步的 13 行用的是 NavigationLink，放在 ScrollView 里——
@@ -2070,6 +2072,14 @@ struct MomentsView: View {
     }
 }
 
+/// 朋友圈名字用的蓝灰色：深色模式修（第 7 步）——原来写死深蓝灰，
+/// 深色模式下印在黑底上几乎看不见。浅色保持原来的深蓝灰，深色调亮。
+private let momentNameColor = Color(uiColor: UIColor { trait in
+    trait.userInterfaceStyle == .dark
+        ? UIColor(red: 0.55, green: 0.68, blue: 0.88, alpha: 1)
+        : UIColor(red: 0.34, green: 0.42, blue: 0.58, alpha: 1)
+})
+
 /// 一条动态：头像、名字、时间、正文、照片九宫格、点赞和评论、赞/评论/删除按钮。
 struct MomentRowView: View {
     let post: MomentPost
@@ -2083,7 +2093,7 @@ struct MomentRowView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(post.authorName)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.58))
+                    .foregroundColor(momentNameColor)
                 Text(momentRelativeTime(post.ts))
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -2103,14 +2113,14 @@ struct MomentRowView: View {
                                     .foregroundColor(.red)
                                 Text("我")
                                     .font(.system(size: 14))
-                                    .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.58))
+                                    .foregroundColor(momentNameColor)
                             }
                         }
                         ForEach(post.comments) { comment in
                             HStack(alignment: .top, spacing: 4) {
                                 Text(comment.authorName)
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.58))
+                                    .foregroundColor(momentNameColor)
                                 Text(comment.text)
                                     .font(.system(size: 14))
                             }

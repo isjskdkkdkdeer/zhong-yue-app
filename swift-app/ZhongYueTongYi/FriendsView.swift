@@ -137,11 +137,18 @@ struct FriendsView: View {
     }
 }
 
+/// 添加好友页：输 6 位好友号确认。
+/// 反馈修（第 7 步）：以前点“添加”没反应——失败原因只写在表单下面一行红字，
+/// 键盘弹着时根本看不见，用户以为按钮死了。现在改成弹框提示，
+/// 成功、重复、加自己、格式不对四种结果都有明确说法；键盘先收起再弹框。
 struct AddFriendView: View {
     @ObservedObject var store: FriendStore
+    @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var number = ""
-    @State private var errorMessage: String?
+    @FocusState private var numberFocused: Bool
+    @State private var alertMessage: String?
+    @State private var alertIsSuccess = false
 
     var body: some View {
         NavigationStack {
@@ -149,6 +156,7 @@ struct AddFriendView: View {
                 Section {
                     TextField("6 位好友号", text: $number)
                         .keyboardType(.numberPad)
+                        .focused($numberFocused)
                         .onChange(of: number) { _, newValue in
                             let filtered = newValue.filter { $0.isNumber }
                             number = String(filtered.prefix(6))
@@ -156,10 +164,13 @@ struct AddFriendView: View {
                 } footer: {
                     Text("本次仅保存到本机列表，好友连接后续步骤接入。")
                 }
-                if let errorMessage {
-                    Section {
-                        Text(errorMessage).foregroundColor(.red)
+                Section {
+                    Button(action: submit) {
+                        Text("添加好友")
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(number.count != 6)
                 }
             }
             .navigationTitle("添加好友")
@@ -169,16 +180,48 @@ struct AddFriendView: View {
                     Button("取消") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("添加") {
-                        if store.add(number: number) {
-                            dismiss()
-                        } else {
-                            errorMessage = "请输入 6 位数字好友号，且不要重复添加。"
-                        }
-                    }
-                    .disabled(number.count != 6)
+                    Button("添加", action: submit)
+                        .disabled(number.count != 6)
                 }
             }
+            .alert(alertMessage ?? "", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button("确定") {
+                    // 成功才关页；失败留在原页，改完号能再点。
+                    if alertIsSuccess { dismiss() }
+                }
+            }
+        }
+    }
+
+    /// 点确认：先收键盘，再按顺序校验——格式、自己、重复，最后才保存。
+    /// 每种结果都弹框说清楚，不再静默。
+    private func submit() {
+        numberFocused = false
+        let num = number
+        guard num.count == 6, num.allSatisfy({ $0.isNumber }) else {
+            alertMessage = "请输入 6 位数字好友号"
+            alertIsSuccess = false
+            return
+        }
+        if num == auth.friendNumber {
+            alertMessage = "不能加自己为好友"
+            alertIsSuccess = false
+            return
+        }
+        if store.friends.contains(where: { $0.id == num }) {
+            alertMessage = "已经是好友了"
+            alertIsSuccess = false
+            return
+        }
+        if store.add(number: num) {
+            alertMessage = "已添加好友号 \(num)"
+            alertIsSuccess = true
+        } else {
+            alertMessage = "添加失败，请再试一次"
+            alertIsSuccess = false
         }
     }
 }
@@ -311,6 +354,7 @@ struct CameraPreviewView: UIViewRepresentable {
 /// 扫到码就停下来解析：是好友号就加到本地好友列表，不是就提示“这不是好友二维码”。
 struct QRScannerView: View {
     @ObservedObject var store: FriendStore
+    @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @StateObject private var controller = QRScannerController()
     @State private var resultMessage: String?
@@ -435,6 +479,9 @@ struct QRScannerView: View {
         }
         if store.friends.contains(where: { $0.id == number }) {
             resultMessage = "已经是好友了"
+            closeAfterResult = true
+        } else if number == auth.friendNumber {
+            resultMessage = "不能加自己为好友"
             closeAfterResult = true
         } else if store.add(number: number) {
             resultMessage = "已添加好友号 \(number)"

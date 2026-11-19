@@ -135,7 +135,9 @@ struct ChatView: View {
                 .lineLimit(1...4)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 9)
-                .background(Color.white)
+                // 深色模式修（第 7 步）：原来写死白色，深色模式下整个聊天页是黑的，
+                // 只有输入框一个大白框。改成 secondarySystemBackground：浅色白底、深色深灰。
+                .background(Color(.secondarySystemBackground))
                 .cornerRadius(18)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18)
@@ -233,7 +235,9 @@ struct MessageBubbleView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 9)
-                .background(isMe ? Color(red: 0, green: 0.48, blue: 1) : Color.white)
+                // 深色模式修（第 7 步）：对方气泡原来写死白色，气泡里的字是自适应的 .primary，
+                // 深色模式下白字印白气泡看不见。改成 secondarySystemBackground，和输入框同款。
+                .background(isMe ? Color(red: 0, green: 0.48, blue: 1) : Color(.secondarySystemBackground))
                 .cornerRadius(16)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
